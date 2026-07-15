@@ -610,7 +610,7 @@
 
 <script>
   // ==========================================
-  // 🌐 FIREBASE COFIG
+  // 🌐 INTEGRATED FIREBASE CONFIG
   // ==========================================
   const firebaseConfig = {
     apiKey: "AIzaSyCDXpbVlu8KPR0nPumTcBV9gemyzwkZtGQ",
@@ -813,7 +813,6 @@
     username = inputVal;
     localStorage.setItem('username', username);
 
-    // Rastgele bir bot seçilir ama hızlı eşleşme olduğu için diyaloglar kapalı olacaktır.
     selectedLevel = Math.floor(Math.random() * 10) + 1;
     isLevelMode = false; 
 
@@ -826,7 +825,6 @@
     username = inputVal;
     localStorage.setItem('username', username);
 
-    // Seviyeli modda tur uzunluğu SABİT 14
     currentTotalRounds = 14;
     targetScore = 34;
     isLevelMode = true;
@@ -850,7 +848,6 @@
     document.getElementById('botStatus').className = "bot-status-container neutral";
     document.getElementById('log').innerHTML = '';
 
-    // İlk diyalog (Seviyeli modda ise konuşurlar, hızlı eşleşmede ise fonksiyon içi engeller)
     showBotDialog(null, null);
 
     startRound();
@@ -860,7 +857,6 @@
   function showBotDialog(prevYou, prevBot) {
     const dialogBox = document.getElementById('botDialog');
     
-    // Hızlı eşleşmede ise asla konuşma kutusu gösterilmez.
     if (!isLevelMode) {
       dialogBox.style.display = 'none';
       return;
