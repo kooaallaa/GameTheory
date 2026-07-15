@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>The Game Theory — Prototip</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg: #0a0a0d;
+    --stage: #141319;
+    --stage-edge: #201f28;
+    --gold: #d4af37;
+    --gold-bright: #f2d675;
+    --steal: #b23a3a;
+    --steal-bright: #d95252;
+    --share: #2f7d6b;
+    --share-bright: #3fa088;
+    --ink: #ece7db;
+    --ink-dim: #9a978f;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0; padding:0; height:100%;
+    background: radial-gradient(ellipse at 50% 0%, #1b1a22 0%, var(--bg) 60%);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+
+  .wrap{
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 20px 40px;
+  }
+
+  .title{
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700;
+    font-size: 34px;
+    text-align: center;
+    letter-spacing: 0.5px;
+    color: var(--gold-bright);
+    margin: 6px 0 2px;
+    text-shadow: 0 0 20px rgba(212,175,55,0.25);
+  }
+  .subtitle{
+    text-align:center;
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin-bottom: 22px;
+  }
+
+  .hud{
+    display:flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    font-family: 'Cormorant Garamond', serif;
+  }
+  .score-box{
+    text-align:center;
+    min-width: 84px;
+  }
+  .score-label{
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .score-value{
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .score-value.you{ color: var(--share-bright); }
+  .score-value.bot{ color: var(--steal-bright); }
+
+  .round-pill{
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: var(--gold);
+    border: 1px solid rgba(212,175,55,0.4);
+    border-radius: 999px;
+    padding: 6px 14px;
+    background: rgba(212,175,55,0.06);
+  }
+
+  .stage{
+    position: relative;
+    background: linear-gradient(180deg, var(--stage) 0%, #0e0d12 100%);
+    border: 1px solid var(--stage-edge);
+    border-radius: 20px;
+    padding: 30px 20px 24px;
+    flex: 1;
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    justify-content: center;
+    min-height: 320px;
+    box-shadow: inset 0 0 60px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4);
+  }
+
+  .spotlight{
+    position:absolute;
+    top:-40px; left:50%;
+    transform: translateX(-50%);
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, rgba(212,175,55,0.12) 0%, transparent 70%);
+    pointer-events:none;
+  }
+
+  .coin{
+    width: 92px; height: 92px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--gold-bright), var(--gold) 55%, #8a6a1f 100%);
+    box-shadow: 0 0 30px rgba(212,175,55,0.35), inset 0 -6px 10px rgba(0,0,0,0.25);
+    display:flex; align-items:center; justify-content:center;
+    font-size: 34px;
+    margin-bottom: 22px;
+    transition: transform 0.5s ease;
+  }
+  .coin.spin{ animation: spin 0.9s ease-in-out; }
+  @keyframes spin{
+    0%{ transform: rotateY(0deg) scale(1); }
+    50%{ transform: rotateY(360deg) scale(1.08); }
+    100%{ transform: rotateY(720deg) scale(1); }
+  }
+
+  .timer-ring{
+    position: relative;
+    width: 64px; height: 64px;
+    margin-bottom: 20px;
+  }
+  .timer-ring svg{ transform: rotate(-90deg); }
+  .timer-ring circle{
+    fill: none;
+    stroke-width: 4;
+  }
+  .timer-track{ stroke: rgba(255,255,255,0.08); }
+  .timer-progress{
+    stroke: var(--gold);
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
+  }
+  .timer-num{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Cormorant Garamond', serif;
+    font-weight:700;
+    font-size: 22px;
+  }
+
+  .prompt{
+    text-align:center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    color: var(--ink);
+    margin-bottom: 22px;
+    min-height: 30px;
+  }
+
+  .choices{
+    display:flex;
+    gap: 14px;
+    width: 100%;
+  }
+  .choice-btn{
+    flex:1;
+    padding: 16px 0;
+    border-radius: 14px;
+    border: none;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    color: #100f0a;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+  }
+  .choice-btn:active{ transform: scale(0.96); }
+  .choice-btn.steal{
+    background: linear-gradient(180deg, var(--steal-bright), var(--steal));
+    color: #1a0a0a;
+    box-shadow: 0 8px 20px rgba(178,58,58,0.35);
+  }
+  .choice-btn.share{
+    background: linear-gradient(180deg, var(--share-bright), var(--share));
+    color: #0a1a15;
+    box-shadow: 0 8px 20px rgba(47,125,107,0.35);
+  }
+  .choice-btn:disabled{ opacity: 0.35; cursor: default; }
+
+  .result-card{
+    width: 100%;
+    text-align:center;
+    animation: fadeUp 0.4s ease;
+  }
+  @keyframes fadeUp{
+    from{ opacity:0; transform: translateY(8px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+  .result-line{
+    font-family:'Cormorant Garamond', serif;
+    font-size: 19px;
+    margin: 3px 0;
+  }
+  .result-line .you-tag{ color: var(--share-bright); font-weight:700; }
+  .result-line .bot-tag{ color: var(--steal-bright); font-weight:700; }
+  .points-line{
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--ink-dim);
+    letter-spacing: 0.5px;
+  }
+  .points-line b{ color: var(--gold-bright); }
+
+  .next-hint{
+    margin-top: 18px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+
+  .final{
+    text-align:center;
+  }
+  .final-title{
+    font-family:'Cormorant Garamond', serif;
+    font-size: 30px;
+    color: var(--gold-bright);
+    margin-bottom: 6px;
+  }
+  .final-sub{
+    color: var(--ink-dim);
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+  .replay-btn{
+    padding: 14px 28px;
+    border-radius: 999px;
+    border: 1px solid var(--gold);
+    background: transparent;
+    color: var(--gold-bright);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .replay-btn:active{ transform: scale(0.97); }
+
+  .log{
+    margin-top: 18px;
+    display:flex;
+    gap:6px;
+    justify-content:center;
+    flex-wrap: wrap;
+  }
+  .log-dot{
+    width: 9px; height:9px; border-radius:50%;
+    background: rgba(255,255,255,0.12);
+  }
+  .log-dot.steal{ background: var(--steal-bright); }
+  .log-dot.share{ background: var(--share-bright); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="title">The Game Theory</div>
+  <div class="subtitle">Çal ya da Paylaş</div>
+
+  <div class="hud">
+    <div class="score-box">
+      <div class="score-label">Sen</div>
+      <div class="score-value you" id="youScore">0</div>
+    </div>
+    <div class="round-pill" id="roundPill">Tur 1 / 7</div>
+    <div class="score-box">
+      <div class="score-label">Rakip</div>
+      <div class="score-value bot" id="botScore">0</div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="spotlight"></div>
+
+    <div id="playArea">
+      <div class="coin" id="coin">🪙</div>
+
+      <div class="timer-ring">
+        <svg width="64" height="64">
+          <circle class="timer-track" cx="32" cy="32" r="28"></circle>
+          <circle class="timer-progress" id="timerCircle" cx="32" cy="32" r="28"
+            stroke-dasharray="176" stroke-dashoffset="0"></circle>
+        </svg>
+        <div class="timer-num" id="timerNum">20</div>
+      </div>
+
+      <div class="prompt" id="prompt">Kararını ver.</div>
+
+      <div class="choices">
+        <button class="choice-btn steal" id="stealBtn">ÇAL</button>
+        <button class="choice-btn share" id="shareBtn">PAYLAŞ</button>
+      </div>
+    </div>
+
+    <div id="resultArea" style="display:none;" class="result-card">
+      <div class="result-line">Sen: <span class="you-tag" id="youChoiceText">—</span></div>
+      <div class="result-line">Rakip: <span class="bot-tag" id="botChoiceText">—</span></div>
+      <div class="points-line" id="pointsText"></div>
+      <div class="next-hint" id="nextHint">Sıradaki tur hazırlanıyor…</div>
+    </div>
+
+    <div id="finalArea" style="display:none;" class="final">
+      <div class="final-title" id="finalTitle">Oyun Bitti</div>
+      <div class="final-sub" id="finalSub"></div>
+      <button class="replay-btn" id="replayBtn">Tekrar Oyna</button>
+    </div>
+  </div>
+
+  <div class="log" id="log"></div>
+</div>
+
+<script>
+  const TOTAL_ROUNDS = 7;
+  const ROUND_TIME = 20;
+
+  let round = 0;
+  let youScore = 0;
+  let botScore = 0;
+  let timeLeft = ROUND_TIME;
+  let timerInterval = null;
+  let decided = false;
+  let history = [];
+
+  const playArea = document.getElementById('playArea');
+  const resultArea = document.getElementById('resultArea');
+  const finalArea = document.getElementById('finalArea');
+  const roundPill = document.getElementById('roundPill');
+  const prompt = document.getElementById('prompt');
+  const stealBtn = document.getElementById('stealBtn');
+  const shareBtn = document.getElementById('shareBtn');
+  const timerNum = document.getElementById('timerNum');
+  const timerCircle = document.getElementById('timerCircle');
+  const coin = document.getElementById('coin');
+  const youScoreEl = document.getElementById('youScore');
+  const botScoreEl = document.getElementById('botScore');
+  const youChoiceText = document.getElementById('youChoiceText');
+  const botChoiceText = document.getElementById('botChoiceText');
+  const pointsText = document.getElementById('pointsText');
+  const nextHint = document.getElementById('nextHint');
+  const logEl = document.getElementById('log');
+  const CIRC = 176;
+
+  function startRound(){
+    round++;
+    if(round > TOTAL_ROUNDS){ return endGame(); }
+
+    decided = false;
+    timeLeft = ROUND_TIME;
+    roundPill.textContent = `Tur ${round} / ${TOTAL_ROUNDS}`;
+    prompt.textContent = 'Kararını ver.';
+    stealBtn.disabled = false;
+    shareBtn.disabled = false;
+    resultArea.style.display = 'none';
+    finalArea.style.display = 'none';
+    playArea.style.display = 'block';
+    timerCircle.style.stroke = 'var(--gold)';
+    updateTimerUI();
+
+    clearInterval(timerInterval);
+    timerInterval = setInterval(()=>{
+      timeLeft--;
+      updateTimerUI();
+      if(timeLeft <= 5){ timerCircle.style.stroke = 'var(--steal-bright)'; }
+      if(timeLeft <= 0){
+        clearInterval(timerInterval);
+        if(!decided){ makeChoice('Paylaş'); }
+      }
+    }, 1000);
+  }
+
+  function updateTimerUI(){
+    timerNum.textContent = Math.max(timeLeft, 0);
+    const offset = CIRC - (CIRC * (timeLeft / ROUND_TIME));
+    timerCircle.style.strokeDashoffset = offset;
+  }
+
+  function makeChoice(choice){
+    if(decided) return;
+    decided = true;
+    clearInterval(timerInterval);
+    stealBtn.disabled = true;
+    shareBtn.disabled = true;
+
+    const botChoice = Math.random() < 0.5 ? 'Çal' : 'Paylaş';
+
+    let yourPoints = 0, botPoints = 0;
+    if(choice === 'Çal' && botChoice === 'Çal'){ yourPoints = 1; botPoints = 1; }
+    else if(choice === 'Paylaş' && botChoice === 'Paylaş'){ yourPoints = 3; botPoints = 3; }
+    else if(choice === 'Çal' && botChoice === 'Paylaş'){ yourPoints = 5; botPoints = 0; }
+    else if(choice === 'Paylaş' && botChoice === 'Çal'){ yourPoints = 0; botPoints = 5; }
+
+    youScore += yourPoints;
+    botScore += botPoints;
+    youScoreEl.textContent = youScore;
+    botScoreEl.textContent = botScore;
+
+    history.push(choice === 'Çal' ? 'steal' : 'share');
+    renderLog();
+
+    coin.classList.add('spin');
+    setTimeout(()=> coin.classList.remove('spin'), 900);
+
+    playArea.style.display = 'none';
+    resultArea.style.display = 'block';
+    youChoiceText.textContent = choice.toUpperCase();
+    botChoiceText.textContent = botChoice.toUpperCase();
+    pointsText.innerHTML = `Bu tur: sen <b>+${yourPoints}</b> · rakip <b>+${botPoints}</b>`;
+
+    const isLast = round >= TOTAL_ROUNDS;
+    nextHint.textContent = isLast ? 'Sonuçlar hesaplanıyor…' : 'Sıradaki tur hazırlanıyor…';
+
+    setTimeout(startRound, 2600);
+  }
+
+  function renderLog(){
+    logEl.innerHTML = '';
+    history.forEach(h=>{
+      const dot = document.createElement('div');
+      dot.className = 'log-dot ' + h;
+      logEl.appendChild(dot);
+    });
+  }
+
+  function endGame(){
+    playArea.style.display = 'none';
+    resultArea.style.display = 'none';
+    finalArea.style.display = 'block';
+
+    const finalTitle = document.getElementById('finalTitle');
+    const finalSub = document.getElementById('finalSub');
+
+    if(youScore > botScore){
+      finalTitle.textContent = 'Kazandın';
+      finalTitle.style.color = 'var(--share-bright)';
+    } else if(botScore > youScore){
+      finalTitle.textContent = 'Kaybettin';
+      finalTitle.style.color = 'var(--steal-bright)';
+    } else {
+      finalTitle.textContent = 'Berabere';
+      finalTitle.style.color = 'var(--gold-bright)';
+    }
+    finalSub.textContent = `Sen: ${youScore} puan  ·  Rakip: ${botScore} puan`;
+  }
+
+  function resetGame(){
+    round = 0; youScore = 0; botScore = 0; history = [];
+    youScoreEl.textContent = '0'; botScoreEl.textContent = '0';
+    renderLog();
+    startRound();
+  }
+
+  stealBtn.addEventListener('click', ()=> makeChoice('Çal'));
+  shareBtn.addEventListener('click', ()=> makeChoice('Paylaş'));
+  document.getElementById('replayBtn').addEventListener('click', resetGame);
+
+  startRound();
+</script>
+</body>
+</html>
