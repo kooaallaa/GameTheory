@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>The Game Theory — Çal ya da Paylaş</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght=500;600;700&family=Inter:wght=300;400;500;600;700&display=swap');
 
   :root {
     --bg: #050508;
@@ -180,6 +180,25 @@
     position: absolute;
     font-size: 9px;
     bottom: 2px;
+  }
+
+  .replay-btn {
+    background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold) 100%);
+    color: #050508;
+    border: none;
+    padding: 15px 30px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 5px 15px rgba(212,175,55,0.2);
+  }
+  .replay-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(212,175,55,0.4);
   }
 
   /* --- OYUN ALANI --- */
@@ -452,20 +471,20 @@
 
 <script>
   // ==========================================
-  // 🌐 FIREBASE AYARLARI (Senin Bilgilerinle Değişecek)
+  // 🌐 GERÇEK FIREBASE AYARLARI
   // ==========================================
   const firebaseConfig = {
-    apiKey: "BURAYA_API_KEY_GELECEK",
-    authDomain: "BURAYA_AUTH_DOMAIN_GELECEK",
-    projectId: "BURAYA_PROJECT_ID_GELECEK",
-    storageBucket: "BURAYA_STORAGE_BUCKET_GELECEK",
-    messagingSenderId: "BURAYA_MESSAGING_SENDER_ID_GELECEK",
-    appId: "BURAYA_APP_ID_GELECEK"
+    apiKey: "AIzaSyCDXpbVlu8KPR0nPumTcBV9gemyzwkZtGQ",
+    authDomain: "gametheory-koalasfirst.firebaseapp.com",
+    projectId: "gametheory-koalasfirst",
+    storageBucket: "gametheory-koalasfirst.firebasestorage.app",
+    messagingSenderId: "453446948489",
+    appId: "1:453446948489:web:3338a534af6dfc0e84d858"
   };
 
   let db = null;
   let isFirebaseReady = false;
-  if (firebaseConfig.apiKey !== "BURAYA_API_KEY_GELECEK") {
+  if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "BURAYA_API_KEY_GELECEK") {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     isFirebaseReady = true;
@@ -474,6 +493,7 @@
   // ==========================================
   // ⚙️ OYUN VE SEVİYE SİSTEMİ VERİLERİ
   // ==========================================
+  const CIRC = 176; // Zamanlayıcı çember çevresi
   let username = localStorage.getItem('username') || "Oyuncu";
   let maxUnlockedLevel = parseInt(localStorage.getItem('maxUnlockedLevel')) || 1;
   let selectedLevel = 1;
@@ -489,7 +509,7 @@
 
   let playerHistory = [];
   let botHistory = [];
-  let scoreHistoryPlayer = [0]; // Grafik için tur tur puanlar
+  let scoreHistoryPlayer = [0]; 
   let scoreHistoryBot = [0];
 
   // 10 Farklı Bot (Kolaydan Zora Doğru Seviyeler)
@@ -525,7 +545,7 @@
     10: { name: "Yırtıcı (Predator) - Seviye 10", decide: () => Math.random() < 0.90 ? 'steal' : 'share' }
   };
 
-  // --- ARALIK & PANEL BAŞLANGICI ---
+  // --- BAŞLANGIÇ ÇALIŞTIRMALARI ---
   document.getElementById('usernameInput').value = username;
   renderLevelGrid();
   loadLeaderboards();
@@ -560,7 +580,6 @@
     if (turns === 7) targetScore = 17;
     else if (turns === 14) targetScore = 34;
     else if (turns === 21) targetScore = 51;
-    document.querySelector('.mission-badge span').textContent = `${targetScore}+ Puan`;
   }
 
   // --- SEKMELER ---
@@ -707,11 +726,11 @@
 
     const youT = document.getElementById('youChoiceText');
     youT.textContent = playerChoice === 'steal' ? 'ÇALDI' : 'PAYLAŞTI';
-    youT.className = playerChoice === 'steal' ? 'bot-tag' : 'you-tag';
+    youT.style.color = playerChoice === 'steal' ? 'var(--steal-bright)' : 'var(--share-bright)';
 
     const botT = document.getElementById('botChoiceText');
     botT.textContent = botChoice === 'steal' ? 'ÇALDI' : 'PAYLAŞTI';
-    botT.className = botChoice === 'steal' ? 'bot-tag' : 'you-tag';
+    botT.style.color = botChoice === 'steal' ? 'var(--steal-bright)' : 'var(--share-bright)';
 
     document.getElementById('pointsText').innerHTML = `Bu tur: sen <b>${yourPoints >= 0 ? '+' + yourPoints : yourPoints}</b> · rakip <b>${botPoints >= 0 ? '+' + botPoints : botPoints}</b>`;
     document.getElementById('nextHint').textContent = round >= currentTotalRounds ? 'Sonuçlar hesaplanıyor…' : 'Sıradaki tur hazırlanıyor…';
@@ -849,7 +868,7 @@
     }
   }
 
-  // --- KÜRESEL LİDERLİK VE GEÇMİŞİ LİSTELEME ---
+  // --- KÜRESEL LİDERLİK VE GEÇMİŞI LİSTELEME ---
   function loadLocalHistory() {
     const list = document.getElementById('historyList');
     const history = JSON.parse(localStorage.getItem('gameHistory')) || [];
@@ -877,8 +896,8 @@
 
   function loadLeaderboards() {
     if (!isFirebaseReady) {
-      document.getElementById('globalList').innerHTML = `<div style="text-align:center; padding:15px; color:var(--ink-dim); font-size:12px;">Global Liderlik için Firebase Config ayarlarını yapmalısın.</div>`;
-      document.getElementById('winnersList').innerHTML = `<div style="text-align:center; padding:15px; color:var(--ink-dim); font-size:12px;">Global Liderlik için Firebase Config ayarlarını yapmalısın.</div>`;
+      document.getElementById('globalList').innerHTML = `<div style="text-align:center; padding:15px; color:var(--ink-dim); font-size:12px;">Global Liderlik için Firebase ayarları eksik.</div>`;
+      document.getElementById('winnersList').innerHTML = `<div style="text-align:center; padding:15px; color:var(--ink-dim); font-size:12px;">Global Liderlik için Firebase ayarları eksik.</div>`;
       return;
     }
 
@@ -903,6 +922,9 @@
             </div>
           `;
         }).join('');
+      }).catch(err => {
+        console.error(err);
+        document.getElementById('globalList').innerHTML = `<div style="text-align:center; padding:10px; color:var(--steal-bright); font-size:11px;">Hata: Firebase kurallarını ve indeksini kontrol et.</div>`;
       });
 
     // 2. KRALLAR TABLOSU (Toplam Galibiyet Sayısı En Çok Olanlar)
@@ -936,6 +958,9 @@
             <div class="table-score" style="color:var(--share-bright);">${w.wins} Zafer</div>
           </div>
         `).join('');
+      }).catch(err => {
+        console.error(err);
+        document.getElementById('winnersList').innerHTML = `<div style="text-align:center; padding:10px; color:var(--steal-bright); font-size:11px;">Hata: Firebase bağlantısı doğrulanamadı.</div>`;
       });
   }
 
