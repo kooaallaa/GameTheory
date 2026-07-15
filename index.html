@@ -370,7 +370,7 @@
   .points-line { margin-top: 14px; font-size: 14px; color: var(--ink-dim); }
   .next-hint { margin-top: 20px; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink-dim); opacity: 0.7; }
 
-  /* --- OYUN SONU PANELİ VE GRAFİK --- */
+  /* --- OYUN SONU PANELİ --- */
   .final { text-align: center; width: 100%; display: none; }
   .final-title { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 700; margin-bottom: 4px; }
   .final-sub { color: var(--ink-dim); font-size: 14px; margin-bottom: 16px; }
@@ -382,8 +382,26 @@
     padding: 12px;
     margin-bottom: 16px;
     width: 100%;
+    display: flex;
+    justify-content: center;
   }
-  canvas { width: 100% !important; height: auto !important; display: block; }
+  .visual-history {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 10px;
+  }
+  .visual-history-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 11px;
+  }
 
   .stats-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 175, 55, 0.15); border-radius: 16px; padding: 16px; margin-bottom: 20px; text-align: left; }
   .stats-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: var(--gold-bright); border-bottom: 1px solid rgba(212, 175, 55, 0.15); padding-bottom: 6px; margin-bottom: 10px; text-align: center; }
@@ -593,7 +611,7 @@
         <div class="final-sub" id="finalSub">Skorlar hesaplandı.</div>
         
         <div class="canvas-container">
-          <canvas id="chartCanvas" width="360" height="150"></canvas>
+          <div id="historyVisualContainer" class="visual-history"></div>
         </div>
 
         <div class="stats-card">
@@ -726,7 +744,7 @@
       },
       getQuote: (prevYou, prevBot) => {
         if (!prevYou) return "Grafikler stabil görünüyor. Risk almadan uzun vadeli yatırımla başlayalım.";
-        return "Son verileri analiz ettim. Güven endeksi dalgalanıyor, hamlemi rasyonel verilere göre yapıyorum.";
+        return "Son verileri analiz ettim. Güven endeksi dalgalanyor, hamlemi rasyonel verilere göre yapıyorum.";
       }
     },
     8: { 
@@ -853,7 +871,7 @@
     startRound();
   }
 
-  // --- DİYALOG KONTROLÜ (HIZLI EŞLEŞMEDE KAPATIR) ---
+  // --- DİYALOG KONTROLÜ ---
   function showBotDialog(prevYou, prevBot) {
     const dialogBox = document.getElementById('botDialog');
     
@@ -899,30 +917,30 @@
     document.getElementById('prompt').textContent = 'Kararını ver.';
     document.getElementById('stealBtn').disabled = false;
     document.getElementById('shareBtn').disabled = false;
-    document.getElementById('resultArea').style.display = 'none';
-    document.getElementById('finalArea').style.display = 'none';
+    
     document.getElementById('playArea').style.display = 'block';
-    timerCircle.style.stroke = isDouble ? 'var(--double-color)' : 'var(--gold)';
-    updateTimerUI();
+    document.getElementById('resultArea').style.display = 'none';
 
-    clearInterval(timerInterval);
+    // Sayacı sıfırla
+    timerCircle.style.strokeDashoffset = 0;
+    document.getElementById('timerNum').textContent = timeLeft;
+
+    if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(() => {
       timeLeft--;
-      updateTimerUI();
+      document.getElementById('timerNum').textContent = timeLeft;
+      
+      let pct = (timeLeft / 20) * CIRC;
+      timerCircle.style.strokeDashoffset = CIRC - pct;
+
       if (timeLeft <= 0) {
         clearInterval(timerInterval);
-        if (!decided) { makeChoice('share'); }
+        makeChoice('share'); // Süre dolunca varsayılan olarak PAYLAŞ yapılır
       }
     }, 1000);
   }
 
-  function updateTimerUI() {
-    document.getElementById('timerNum').textContent = Math.max(timeLeft, 0);
-    const offset = CIRC - (CIRC * (timeLeft / 20));
-    document.getElementById('timerCircle').style.strokeDashoffset = offset;
-  }
-
-  // --- SEÇİM YAPMA VE PUANLAMA MANTIĞI ---
+  // --- KARAR VERME ---
   function makeChoice(playerChoice) {
     if (decided) return;
     decided = true;
@@ -931,313 +949,303 @@
     document.getElementById('stealBtn').disabled = true;
     document.getElementById('shareBtn').disabled = true;
 
-    const botChoice = BOT_STRATEGIES[selectedLevel].decide();
+    // Madeni para çevirme animasyonu
+    const coin = document.getElementById('coin');
+    coin.classList.add('spin');
 
-    let yourPoints = 0, botPoints = 0;
-    if (playerChoice === 'share' && botChoice === 'share') { yourPoints = 3; botPoints = 3; }
-    else if (playerChoice === 'steal' && botChoice === 'share') { yourPoints = 5; botPoints = 1; }
-    else if (playerChoice === 'share' && botChoice === 'steal') { yourPoints = 1; botPoints = 5; }
-    else if (playerChoice === 'steal' && botChoice === 'steal') { yourPoints = -1; botPoints = -1; }
+    setTimeout(() => {
+      coin.classList.remove('spin');
+      processRoundResult(playerChoice);
+    }, 900);
+  }
 
-    let isDouble = false;
-    if (currentTotalRounds === 7 && round === 5) isDouble = true;
-    else if (currentTotalRounds === 14 && round === 7) isDouble = true;
-    else if (currentTotalRounds === 21 && (round === 5 || round === 17)) isDouble = true;
+  // --- TUR SONUCU KONTROLÜ ---
+  function processRoundResult(playerChoice) {
+    const botStrat = BOT_STRATEGIES[selectedLevel];
+    const botChoice = botStrat.decide();
 
-    if (isDouble) {
-      yourPoints *= 2;
-      botPoints *= 2;
+    playerHistory.push(playerChoice);
+    botHistory.push(botChoice);
+
+    // Çift puan turu tespiti
+    let multiplier = 1;
+    if (currentTotalRounds === 7 && round === 5) multiplier = 2;
+    else if (currentTotalRounds === 14 && round === 7) multiplier = 2;
+    else if (currentTotalRounds === 21 && (round === 5 || round === 17)) multiplier = 2;
+
+    let pEarned = 0;
+    let bEarned = 0;
+
+    if (playerChoice === 'share' && botChoice === 'share') {
+      pEarned = 3 * multiplier;
+      bEarned = 3 * multiplier;
+    } else if (playerChoice === 'share' && botChoice === 'steal') {
+      pEarned = 0;
+      bEarned = 5 * multiplier;
+    } else if (playerChoice === 'steal' && botChoice === 'share') {
+      pEarned = 5 * multiplier;
+      bEarned = 0;
+    } else {
+      pEarned = 1 * multiplier;
+      bEarned = 1 * multiplier;
     }
 
-    youScore += yourPoints;
-    botScore += botPoints;
-    document.getElementById('youScore').textContent = youScore;
-    document.getElementById('botScore').textContent = botScore;
+    youScore += pEarned;
+    botScore += bEarned;
 
     scoreHistoryPlayer.push(youScore);
     scoreHistoryBot.push(botScore);
 
-    const botStatusEl = document.getElementById('botStatus');
+    // Skorları HUD'a yazdır
+    document.getElementById('youScore').textContent = youScore;
+    document.getElementById('botScore').textContent = botScore;
+
+    // Alt Kısım Log Dot Ekleme
+    const log = document.getElementById('log');
+    const dot = document.createElement('div');
+    dot.className = `log-dot ${playerChoice}`;
+    log.appendChild(dot);
+
+    // Bot Güven Durumu Görseli Güncelleme
+    const botStatus = document.getElementById('botStatus');
     if (playerChoice === 'steal') {
-      botStatusEl.textContent = "⚡ Öfkeli";
-      botStatusEl.className = "bot-status-container angry";
+      botStatus.textContent = "Kızgın";
+      botStatus.className = "bot-status-container angry";
+    } else if (playerChoice === 'share' && botChoice === 'share') {
+      botStatus.textContent = "Dost";
+      botStatus.className = "bot-status-container trust";
     } else {
-      botStatusEl.textContent = "❤️ Güvenli";
-      botStatusEl.className = "bot-status-container trust";
+      botStatus.textContent = "Nötr";
+      botStatus.className = "bot-status-container neutral";
     }
 
-    playerHistory.push(playerChoice);
-    botHistory.push(botChoice);
-    renderLog();
+    // Arayüz Sonuç Kartı Hazırlama
+    document.getElementById('youChoiceText').textContent = playerChoice === 'share' ? 'PAYLAŞTI' : 'ÇALDI';
+    document.getElementById('youChoiceText').style.color = playerChoice === 'share' ? 'var(--share-bright)' : 'var(--steal-bright)';
+    
+    document.getElementById('botChoiceText').textContent = botChoice === 'share' ? 'PAYLAŞTI' : 'ÇALDI';
+    document.getElementById('botChoiceText').style.color = botChoice === 'share' ? 'var(--share-bright)' : 'var(--steal-bright)';
 
-    showBotDialog(playerChoice, botChoice);
-
-    const coin = document.getElementById('coin');
-    coin.classList.add('spin');
-    setTimeout(() => coin.classList.remove('spin'), 900);
+    document.getElementById('pointsText').innerHTML = `Bu el kazandığın: <b style="color:#fff;">+${pEarned}</b> | Yapay zeka kazandı: <b style="color:#fff;">+${bEarned}</b>`;
 
     document.getElementById('playArea').style.display = 'none';
     document.getElementById('resultArea').style.display = 'block';
 
-    const youT = document.getElementById('youChoiceText');
-    youT.textContent = playerChoice === 'steal' ? 'ÇALDI' : 'PAYLAŞTI';
-    youT.style.color = playerChoice === 'steal' ? 'var(--steal-bright)' : 'var(--share-bright)';
+    showBotDialog(playerChoice, botChoice);
 
-    const botT = document.getElementById('botChoiceText');
-    botT.textContent = botChoice === 'steal' ? 'ÇALDI' : 'PAYLAŞTI';
-    botT.style.color = botChoice === 'steal' ? 'var(--steal-bright)' : 'var(--share-bright)';
-
-    document.getElementById('pointsText').innerHTML = `Bu tur: sen <b>${yourPoints >= 0 ? '+' + yourPoints : yourPoints}</b> · rakip <b>${botPoints >= 0 ? '+' + botPoints : botPoints}</b>`;
-    document.getElementById('nextHint').textContent = round >= currentTotalRounds ? 'Sonuçlar hesaplanıyor…' : 'Sıradaki tur hazırlanıyor…';
-
-    setTimeout(startRound, 2500);
+    setTimeout(() => {
+      startRound();
+    }, 4000);
   }
 
-  function renderLog() {
-    const logEl = document.getElementById('log');
-    logEl.innerHTML = '';
-    playerHistory.forEach(h => {
-      const dot = document.createElement('div');
-      dot.className = 'log-dot ' + h;
-      logEl.appendChild(dot);
-    });
-  }
-
-  // --- OYUN SONU PANELİ VE GRAFİK ---
+  // --- OYUN SONU PANELİ ---
   function endGame() {
     document.getElementById('playArea').style.display = 'none';
     document.getElementById('resultArea').style.display = 'none';
     document.getElementById('finalArea').style.display = 'block';
 
-    const finalTitle = document.getElementById('finalTitle');
+    const botStrat = BOT_STRATEGIES[selectedLevel];
+    document.getElementById('statBotStrategy').textContent = botStrat.name;
+
+    let missionPassed = youScore >= targetScore;
     const statMission = document.getElementById('statMission');
 
-    const scoreCondition = youScore >= targetScore;
-    let resultText = "lose";
-
-    if (scoreCondition && youScore > botScore) {
-      finalTitle.textContent = 'Büyük Zafer!';
-      finalTitle.style.color = 'var(--share-bright)';
-      statMission.textContent = `Başarılı (Skorun: ${youScore})`;
-      statMission.style.color = 'var(--share-bright)';
-      resultText = "win";
-
-      if (isLevelMode && selectedLevel === maxUnlockedLevel && maxUnlockedLevel < 10) {
-        maxUnlockedLevel++;
-        localStorage.setItem('maxUnlockedLevel', maxUnlockedLevel);
-      }
-    } else if (scoreCondition && youScore === botScore) {
-      finalTitle.textContent = 'Beraberlik!';
-      finalTitle.style.color = 'var(--gold-bright)';
-      statMission.textContent = `Puan Korundu (${youScore})`;
-      statMission.style.color = 'var(--gold-bright)';
-      resultText = "draw";
-    } else if (!scoreCondition) {
-      finalTitle.textContent = 'Baraj Geçilemedi!';
-      finalTitle.style.color = 'var(--steal-bright)';
-      statMission.textContent = `Başarısız (Baraj: ${targetScore})`;
-      statMission.style.color = 'var(--steal-bright)';
-    } else {
-      finalTitle.textContent = 'Yenilgi!';
-      finalTitle.style.color = 'var(--steal-bright)';
-      statMission.textContent = `Bot Seni Geçti (Rakip: ${botScore})`;
-      statMission.style.color = 'var(--steal-bright)';
-    }
-
-    document.getElementById('finalSub').textContent = `${username}: ${youScore}  ·  Rakip: ${botScore}`;
-    document.getElementById('statBotStrategy').textContent = BOT_STRATEGIES[selectedLevel].name;
-
-    drawChart();
-    saveGameResult(resultText);
-  }
-
-  function drawChart() {
-    const canvas = document.getElementById('chartCanvas');
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const maxPoints = Math.max(...scoreHistoryPlayer, ...scoreHistoryBot, 10);
-    const minPoints = Math.min(...scoreHistoryPlayer, ...scoreHistoryBot, 0);
-    const range = maxPoints - minPoints;
-
-    const pad = 20;
-    const w = canvas.width - (pad * 2);
-    const h = canvas.height - (pad * 2);
-
-    function getX(index) { return pad + (index * (w / currentTotalRounds)); }
-    function getY(val) { return pad + h - (((val - minPoints) / range) * h); }
-
-    function drawLine(history, color) {
-      ctx.beginPath();
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2.5;
-      ctx.moveTo(getX(0), getY(history[0]));
-      for (let i = 1; i <= currentTotalRounds; i++) {
-        if (history[i] !== undefined) ctx.lineTo(getX(i), getY(history[i]));
-      }
-      ctx.stroke();
-
-      for (let i = 0; i <= currentTotalRounds; i++) {
-        if (history[i] !== undefined) {
-          ctx.beginPath();
-          ctx.fillStyle = color;
-          ctx.arc(getX(i), getY(history[i]), 3.5, 0, Math.PI * 2);
-          ctx.fill();
+    if (isLevelMode) {
+      if (missionPassed) {
+        statMission.textContent = `BAŞARILI! (${targetScore} puan hedefine ulaştın)`;
+        statMission.style.color = 'var(--share-bright)';
+        if (selectedLevel === maxUnlockedLevel && maxUnlockedLevel < 10) {
+          maxUnlockedLevel++;
+          localStorage.setItem('maxUnlockedLevel', maxUnlockedLevel);
         }
+      } else {
+        statMission.textContent = `BAŞARISIZ! (Hedeflenen ${targetScore} puana ulaşamadın)`;
+        statMission.style.color = 'var(--steal-bright)';
       }
+    } else {
+      statMission.textContent = `Hızlı Eşleşme tamamlandı. Skorun: ${youScore}`;
+      statMission.style.color = 'var(--gold-bright)';
     }
 
-    drawLine(scoreHistoryPlayer, '#43bfa3');
-    drawLine(scoreHistoryBot, '#e55c5c');
+    // Skor Geçmişi Görsel Tablo Çizimi (Canvas Yerine Alternatif Güvenli CSS Yapısı)
+    const container = document.getElementById('historyVisualContainer');
+    container.innerHTML = playerHistory.map((p, idx) => `
+      <div class="visual-history-item">
+        <span style="color:var(--gold); font-weight:700;">T${idx+1}</span>
+        <span style="color:${p === 'share' ? 'var(--share-bright)' : 'var(--steal-bright)'}">${p === 'share' ? '🤝' : '⚔️'}</span>
+        <span style="color:${botHistory[idx] === 'share' ? 'var(--share-bright)' : 'var(--steal-bright)'}">${botHistory[idx] === 'share' ? '🤝' : '⚔️'}</span>
+      </div>
+    `).join('');
+
+    saveToFirebaseAndLocal();
   }
 
-  function saveGameResult(result) {
-    const record = {
+  function exitToMenu() {
+    document.getElementById('gameScreen').style.display = 'none';
+    document.getElementById('finalArea').style.display = 'none';
+    document.getElementById('menuScreen').style.display = 'flex';
+    loadLeaderboardByRound(currentTotalRounds);
+    loadLocalHistory();
+  }
+
+  // ==========================================
+  // 💾 VERİ TABANI & KAYIT İŞLEMLERİ (LOKAL & FIREBASE)
+  // ==========================================
+  function saveToFirebaseAndLocal() {
+    const gameRecord = {
       username: username,
       score: youScore,
       botScore: botScore,
-      botName: BOT_STRATEGIES[selectedLevel].name,
-      level: selectedLevel,
       rounds: currentTotalRounds,
-      result: result,
+      botName: BOT_STRATEGIES[selectedLevel].name,
       timestamp: new Date().getTime()
     };
 
-    let history = JSON.parse(localStorage.getItem('gameHistory')) || [];
-    history.unshift(record);
-    localStorage.setItem('gameHistory', JSON.stringify(history));
-    loadLocalHistory();
+    // 1. Lokal Hafızaya Kaydet (Geçmişim Tablosu İçin)
+    let localHist = JSON.parse(localStorage.getItem('matchHistory')) || [];
+    localHist.unshift(gameRecord);
+    localStorage.setItem('matchHistory', JSON.stringify(localHist.slice(0, 30)));
 
-    if (isFirebaseReady) {
-      db.collection("scores").add(record).then(() => {
-        loadLeaderboardByRound(currentTotalRounds); 
-      }).catch(err => console.error("Firebase yazma hatası:", err));
+    // 2. Firebase Database Kaydı
+    if (isFirebaseReady && db) {
+      db.collection("scores").add(gameRecord)
+        .then(() => {
+          console.log("Skor Firebase'e başarıyla yazıldı!");
+        })
+        .catch(err => {
+          console.error("Skor yüklenirken Firebase hatası:", err);
+        });
     }
   }
 
   function loadLocalHistory() {
-    const list = document.getElementById('historyList');
-    const history = JSON.parse(localStorage.getItem('gameHistory')) || [];
-    if (history.length === 0) {
-      list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--ink-dim);">Henüz oynanmış oyunun yok.</div>`;
+    const historyList = document.getElementById('historyList');
+    const localHist = JSON.parse(localStorage.getItem('matchHistory')) || [];
+
+    if (localHist.length === 0) {
+      historyList.innerHTML = `<div style="text-align:center; padding:20px; color:var(--ink-dim);">Henüz hiç maç oynamadın.</div>`;
       return;
     }
-    list.innerHTML = history.map(item => {
-      let resColor = item.result === 'win' ? 'var(--share-bright)' : (item.result === 'draw' ? 'var(--gold-bright)' : 'var(--steal-bright)');
-      let resText = item.result === 'win' ? 'Zafer' : (item.result === 'draw' ? 'Beraberlik' : 'Yenilgi');
-      return `
-        <div class="table-item">
-          <div>
-            <div class="table-name">${item.botName}</div>
-            <div class="table-sub">${item.rounds} Tur · ${new Date(item.timestamp).toLocaleDateString()}</div>
-          </div>
-          <div style="text-align: right;">
-            <div class="table-score">${item.score} - ${item.botScore}</div>
-            <div style="font-size:10px; font-weight:700; color:${resColor};">${resText}</div>
-          </div>
+
+    historyList.innerHTML = localHist.map(h => `
+      <div class="table-item">
+        <div>
+          <span class="table-name">vs ${h.botName.split(" - ")[0]}</span>
+          <div class="table-sub">${h.rounds} Tur | ${new Date(h.timestamp).toLocaleDateString()}</div>
         </div>
-      `;
-    }).join('');
+        <div class="table-score" style="color:${h.score >= h.botScore ? 'var(--share-bright)' : 'var(--steal-bright)'}">
+          ${h.score} - ${h.botScore}
+        </div>
+      </div>
+    `).join('');
   }
 
-  // --- LİDERLİK TABLOSU SÜZGEÇLERİ ---
+  // ==========================================
+  // 🏆 LİDERLİK TABLOSU YÜKLEYİCİ (3. YÖNTEM INTEGRATED)
+  // ==========================================
   function loadLeaderboardByRound(rounds) {
     document.querySelectorAll('.sub-filters .sub-filter-btn').forEach(btn => btn.classList.remove('active'));
     if (rounds === 7) document.getElementById('sub7Btn').classList.add('active');
     if (rounds === 14) document.getElementById('sub14Btn').classList.add('active');
     if (rounds === 21) document.getElementById('sub21Btn').classList.add('active');
 
+    const listEl = document.getElementById('globalList');
+
     if (!isFirebaseReady) {
-      document.getElementById('globalList').innerHTML = `<div style="text-align:center; padding:15px; color:var(--ink-dim); font-size:12px;">Global Liderlik için Firebase ayarları eksik.</div>`;
+      listEl.innerHTML = `<div style="text-align:center; padding:15px; color:var(--ink-dim); font-size:12px;">Global Liderlik için Firebase ayarları eksik.</div>`;
       return;
     }
 
+    listEl.innerHTML = `<div style="text-align:center; padding:20px; color:var(--ink-dim);">Skorlar yükleniyor...</div>`;
+
+    // JavaScript tarafında yerel sıralama yapan 3. yöntemi çalıştırıyoruz:
     db.collection("scores")
       .where("rounds", "==", rounds)
-      .orderBy("score", "desc")
-      .limit(10)
+      .limit(100) 
       .get()
       .then(snapshot => {
-        const listEl = document.getElementById('globalList');
         if (snapshot.empty) {
           listEl.innerHTML = `<div style="text-align:center; padding:20px; color:var(--ink-dim); font-size:13px;">${rounds} Tur için rekor yok. İlk sen ol!</div>`;
           return;
         }
+
+        // Çekilen verileri tarayıcıda sıralıyoruz (Dizin hatası vermesini engeller)
+        const sortedDocs = snapshot.docs
+          .map(doc => doc.data())
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 10);
+
         let index = 1;
-        listEl.innerHTML = snapshot.docs.map(doc => {
-          const d = doc.data();
-          return `
-            <div class="table-item">
-              <div><span style="color:var(--gold-bright); font-weight:700; margin-right:8px;">#${index++}</span> <span class="table-name">${d.username}</span></div>
-              <div class="table-score">${d.score} Puan <span style="font-size: 10px; color: var(--ink-dim); font-weight: normal;">(${d.botName.split(" - ")[0]})</span></div>
-            </div>
-          `;
-        }).join('');
+        listEl.innerHTML = sortedDocs.map(d => `
+          <div class="table-item">
+            <div><span style="color:var(--gold-bright); font-weight:700; margin-right:8px;">#${index++}</span> <span class="table-name">${d.username}</span></div>
+            <div class="table-score">${d.score} Puan <span style="font-size: 10px; color: var(--ink-dim); font-weight: normal;">(${d.botName.split(" - ")[0]})</span></div>
+          </div>
+        `).join('');
       }).catch(err => {
-        console.error(err);
-        document.getElementById('globalList').innerHTML = `<div style="text-align:center; padding:10px; color:var(--steal-bright); font-size:11px;">Skor yüklenemedi.</div>`;
+        console.error("Firebase Hatası Detayı:", err);
+        listEl.innerHTML = `<div style="text-align:center; padding:10px; color:var(--steal-bright); font-size:11px;">Skor yüklenemedi.</div>`;
       });
   }
 
-  function loadWinnersLeaderboard() {
+  // --- SEKMELİ GEÇİŞ SİSTEMİ ---
+  function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-link').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+    btn.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+
+    if (tabId === 'tabWinners') {
+      loadWinnersTab();
+    }
+  }
+
+  function loadWinnersTab() {
+    const winnersList = document.getElementById('winnersList');
     if (!isFirebaseReady) {
-      document.getElementById('winnersList').innerHTML = `<div style="text-align:center; padding:15px; color:var(--ink-dim); font-size:12px;">Global Liderlik için Firebase ayarları eksik.</div>`;
+      winnersList.innerHTML = `<div style="text-align:center; padding:15px; color:var(--ink-dim); font-size:12px;">Firebase bağlantısı yok.</div>`;
       return;
     }
 
     db.collection("scores")
-      .where("result", "==", "win")
       .get()
       .then(snapshot => {
-        const listEl = document.getElementById('winnersList');
         if (snapshot.empty) {
-          listEl.innerHTML = `<div style="text-align:center; padding:10px; color:var(--ink-dim);">Henüz kazanan kral yok.</div>`;
+          winnersList.innerHTML = `<div style="text-align:center; padding:20px; color:var(--ink-dim);">Kraliyet koltuğu henüz boş!</div>`;
           return;
         }
 
-        let winCounts = {};
+        // Skorları tarayıcıda gruplayıp en çok galibiyeti olan "Kralları" seçiyoruz
+        let winsMap = {};
         snapshot.docs.forEach(doc => {
-          const name = doc.data().username;
-          winCounts[name] = (winCounts[name] || 0) + 1;
+          const data = doc.data();
+          if (data.score > data.botScore) {
+            winsMap[data.username] = (winsMap[data.username] || 0) + 1;
+          }
         });
 
-        let sortedWinners = Object.keys(winCounts).map(name => ({
-          name: name,
-          wins: winCounts[name]
-        })).sort((a,b) => b.wins - a.wins).slice(0, 10);
+        const sortedWinners = Object.keys(winsMap)
+          .map(name => ({ username: name, wins: winsMap[name] }))
+          .sort((a, b) => b.wins - a.wins)
+          .slice(0, 5);
+
+        if (sortedWinners.length === 0) {
+          winnersList.innerHTML = `<div style="text-align:center; padding:20px; color:var(--ink-dim);">Yapay zekayı yenebilen henüz çıkmadı!</div>`;
+          return;
+        }
 
         let index = 1;
-        listEl.innerHTML = sortedWinners.map(w => `
+        winnersList.innerHTML = sortedWinners.map(w => `
           <div class="table-item">
-            <div><span style="color:var(--gold-bright); font-weight:700; margin-right:8px;">#${index++}</span> <span class="table-name">${w.name}</span></div>
-            <div class="table-score" style="color:var(--share-bright);">${w.wins} Zafer</div>
+            <div><span style="color:#d4af37; font-weight:700; margin-right:8px;">👑 #${index++}</span> <span class="table-name">${w.username}</span></div>
+            <div class="table-score" style="color:var(--gold-bright);">${w.wins} Galibiyet</div>
           </div>
         `).join('');
       }).catch(err => {
         console.error(err);
-        document.getElementById('winnersList').innerHTML = `<div style="text-align:center; padding:10px; color:var(--steal-bright); font-size:11px;">Hata: Bağlantı hatası.</div>`;
+        winnersList.innerHTML = `<div style="text-align:center; padding:15px; color:var(--steal-bright);">Yüklenirken hata oluştu.</div>`;
       });
-  }
-
-  function switchTab(tabId, btn) {
-    document.querySelectorAll('.tab-link').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(tabId).classList.add('active');
-
-    if (tabId === 'tabGlobal') {
-      loadLeaderboardByRound(currentTotalRounds);
-    } else if (tabId === 'tabWinners') {
-      loadWinnersLeaderboard();
-    } else if (tabId === 'tabHistory') {
-      loadLocalHistory();
-    }
-  }
-
-  function exitToMenu() {
-    document.getElementById('gameScreen').style.display = 'none';
-    document.getElementById('menuScreen').style.display = 'block';
-    loadLeaderboardByRound(currentTotalRounds);
   }
 </script>
 </body>
