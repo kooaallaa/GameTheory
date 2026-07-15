@@ -641,10 +641,17 @@
 
   let db = null;
   let isFirebaseReady = false;
-  if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "BURAYA_API_KEY_GELECEK") {
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-    isFirebaseReady = true;
+  try {
+    if (typeof firebase !== 'undefined' && firebaseConfig.apiKey && firebaseConfig.apiKey !== "BURAYA_API_KEY_GELECEK") {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      isFirebaseReady = true;
+    } else {
+      console.warn("Firebase SDK yüklenemedi, global liderlik tablosu devre dışı.");
+    }
+  } catch (e) {
+    console.error("Firebase başlatma hatası:", e);
+    isFirebaseReady = false;
   }
 
   // ==========================================
@@ -980,14 +987,14 @@
       pEarned = 3 * multiplier;
       bEarned = 3 * multiplier;
     } else if (playerChoice === 'share' && botChoice === 'steal') {
-      pEarned = 0;
+      pEarned = 1 * multiplier;
       bEarned = 5 * multiplier;
     } else if (playerChoice === 'steal' && botChoice === 'share') {
       pEarned = 5 * multiplier;
-      bEarned = 0;
-    } else {
-      pEarned = 1 * multiplier;
       bEarned = 1 * multiplier;
+    } else {
+      pEarned = -1 * multiplier;
+      bEarned = -1 * multiplier;
     }
 
     youScore += pEarned;
@@ -1026,7 +1033,7 @@
     document.getElementById('botChoiceText').textContent = botChoice === 'share' ? 'PAYLAŞTI' : 'ÇALDI';
     document.getElementById('botChoiceText').style.color = botChoice === 'share' ? 'var(--share-bright)' : 'var(--steal-bright)';
 
-    document.getElementById('pointsText').innerHTML = `Bu el kazandığın: <b style="color:#fff;">+${pEarned}</b> | Yapay zeka kazandı: <b style="color:#fff;">+${bEarned}</b>`;
+    document.getElementById('pointsText').innerHTML = `Bu el kazandığın: <b style="color:#fff;">${pEarned >= 0 ? '+' : ''}${pEarned}</b> | Yapay zeka kazandı: <b style="color:#fff;">${bEarned >= 0 ? '+' : ''}${bEarned}</b>`;
 
     document.getElementById('playArea').style.display = 'none';
     document.getElementById('resultArea').style.display = 'block';
