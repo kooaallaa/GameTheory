@@ -20,6 +20,11 @@
     --ink: #f3efe6;
     --ink-dim: #a3a097;
     --premium-glow: rgba(212, 175, 55, 0.08);
+    
+    --double-glow: rgba(147, 51, 234, 0.15);
+    --double-edge: rgba(147, 51, 234, 0.4);
+    --double-color: #a855f7;
+    --double-color-bright: #c084fc;
   }
 
   * { box-sizing: border-box; }
@@ -31,6 +36,11 @@
     font-family: 'Inter', system-ui, sans-serif;
     overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
+    transition: background 0.8s ease;
+  }
+
+  body.double-mode {
+    background: radial-gradient(circle at 50% -20%, #290f42 0%, #07040f 50%, var(--bg) 100%);
   }
 
   .wrap {
@@ -42,7 +52,6 @@
     padding: 20px 16px 30px;
   }
 
-  /* Premium Header */
   .header-container {
     text-align: center;
     margin-bottom: 20px;
@@ -68,7 +77,6 @@
     opacity: 0.8;
   }
 
-  /* Görev Rozeti */
   .mission-badge {
     display: inline-flex;
     align-items: center;
@@ -83,11 +91,8 @@
     text-shadow: 0 0 10px rgba(212,175,55,0.2);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   }
-  .mission-badge span {
-    font-weight: 700;
-  }
+  .mission-badge span { font-weight: 700; }
 
-  /* HUD (Skor Paneli) */
   .hud {
     display: flex;
     justify-content: space-between;
@@ -99,10 +104,7 @@
     padding: 10px 16px;
     backdrop-filter: blur(10px);
   }
-  .score-box {
-    text-align: center;
-    min-width: 80px;
-  }
+  .score-box { text-align: center; min-width: 80px; }
   .score-label {
     font-family: 'Inter', sans-serif;
     font-size: 9px;
@@ -116,14 +118,21 @@
     font-weight: 700;
     color: var(--ink);
   }
-  .score-value.you { 
-    color: var(--share-bright); 
-    text-shadow: 0 0 15px rgba(67, 191, 163, 0.2);
+  .score-value.you { color: var(--share-bright); text-shadow: 0 0 15px rgba(67, 191, 163, 0.2); }
+  .score-value.bot { color: var(--steal-bright); text-shadow: 0 0 15px rgba(229, 92, 92, 0.2); }
+
+  /* Bot Durum Göstergesi (Öfke / Güven) */
+  .bot-status-container {
+    margin-top: 4px;
+    font-size: 11px;
+    min-height: 16px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
   }
-  .score-value.bot { 
-    color: var(--steal-bright); 
-    text-shadow: 0 0 15px rgba(229, 92, 92, 0.2);
-  }
+  .bot-status-container.neutral { color: var(--ink-dim); }
+  .bot-status-container.trust { color: var(--share-bright); text-shadow: 0 0 8px rgba(67,191,163,0.3); }
+  .bot-status-container.angry { color: var(--steal-bright); text-shadow: 0 0 8px rgba(229,92,92,0.3); }
 
   .round-pill {
     font-family: 'Inter', sans-serif;
@@ -135,10 +144,20 @@
     border-radius: 999px;
     padding: 6px 14px;
     background: rgba(212,175,55,0.06);
-    box-shadow: 0 0 15px rgba(212,175,55,0.05);
+    transition: all 0.5s ease;
+  }
+  .round-pill.double-active {
+    color: var(--double-color-bright);
+    border-color: var(--double-edge);
+    background: rgba(147, 51, 234, 0.15);
+    box-shadow: 0 0 15px rgba(147, 51, 234, 0.3);
+    animation: pulse 1.5s infinite alternate;
+  }
+  @keyframes pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.04); }
   }
 
-  /* Premium Stage */
   .stage {
     position: relative;
     background: var(--stage);
@@ -153,10 +172,12 @@
     min-height: 360px;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    box-shadow: 
-      inset 0 0 40px rgba(0,0,0,0.6), 
-      0 15px 35px rgba(0,0,0,0.5),
-      0 0 30px var(--premium-glow);
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.6), 0 15px 35px rgba(0,0,0,0.5), 0 0 30px var(--premium-glow);
+    transition: all 0.5s ease;
+  }
+  .stage.double-active {
+    border-color: var(--double-edge);
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.7), 0 15px 35px rgba(0,0,0,0.6), 0 0 35px var(--double-glow);
   }
 
   .spotlight {
@@ -168,15 +189,11 @@
     pointer-events: none;
   }
 
-  /* Coin */
   .coin {
     width: 96px; height: 96px;
     border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #fff 0%, var(--gold-bright) 30%, var(--gold) 70%, #6e5210 100%);
-    box-shadow: 
-      0 0 35px rgba(212,175,55,0.4), 
-      inset 0 -6px 12px rgba(0,0,0,0.3),
-      inset 0 4px 6px rgba(255,255,255,0.6);
+    box-shadow: 0 0 35px rgba(212,175,55,0.4), inset 0 -6px 12px rgba(0,0,0,0.3), inset 0 4px 6px rgba(255,255,255,0.6);
     display: flex; align-items: center; justify-content: center;
     font-size: 38px;
     margin-bottom: 24px;
@@ -189,17 +206,9 @@
     100% { transform: rotateY(720deg) scale(1); }
   }
 
-  /* Premium Timer Ring */
-  .timer-ring {
-    position: relative;
-    width: 68px; height: 68px;
-    margin-bottom: 24px;
-  }
+  .timer-ring { position: relative; width: 68px; height: 68px; margin-bottom: 24px; }
   .timer-ring svg { transform: rotate(-90deg); }
-  .timer-ring circle {
-    fill: none;
-    stroke-width: 3.5;
-  }
+  .timer-ring circle { fill: none; stroke-width: 3.5; }
   .timer-track { stroke: rgba(255,255,255,0.05); }
   .timer-progress {
     stroke: var(--gold);
@@ -213,7 +222,6 @@
     font-family: 'Cormorant Garamond', serif;
     font-weight: 700;
     font-size: 24px;
-    text-shadow: 0 0 10px rgba(255,255,255,0.1);
   }
 
   .prompt {
@@ -223,182 +231,58 @@
     color: var(--ink);
     margin-bottom: 24px;
     min-height: 30px;
-    letter-spacing: 0.3px;
   }
 
-  /* Choice Buttons */
-  .choices {
-    display: flex;
-    gap: 16px;
-    width: 100%;
-  }
+  .choices { display: flex; gap: 16px; width: 100%; }
   .choice-btn {
-    flex: 1;
-    padding: 18px 0;
-    border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.05);
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 21px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    flex: 1; padding: 18px 0; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);
+    font-family: 'Cormorant Garamond', serif; font-size: 21px; font-weight: 700; letter-spacing: 1.5px;
+    cursor: pointer; transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
-  .choice-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-  }
-  .choice-btn:active:not(:disabled) { 
-    transform: translateY(1px) scale(0.98); 
-  }
+  .choice-btn:hover:not(:disabled) { transform: translateY(-2px); }
+  .choice-btn:active:not(:disabled) { transform: translateY(1px) scale(0.98); }
   
-  .choice-btn.steal {
-    background: linear-gradient(135deg, var(--steal-bright) 0%, var(--steal) 100%);
-    color: #fff;
-    box-shadow: 0 8px 24px rgba(178,58,58,0.3);
-  }
-  .choice-btn.steal:hover:not(:disabled) {
-    box-shadow: 0 12px 28px rgba(178,58,58,0.45);
-  }
+  .choice-btn.steal { background: linear-gradient(135deg, var(--steal-bright) 0%, var(--steal) 100%); color: #fff; box-shadow: 0 8px 24px rgba(178,58,58,0.3); }
+  .choice-btn.steal:hover:not(:disabled) { box-shadow: 0 12px 28px rgba(178,58,58,0.45); }
   
-  .choice-btn.share {
-    background: linear-gradient(135deg, var(--share-bright) 0%, var(--share) 100%);
-    color: #fff;
-    box-shadow: 0 8px 24px rgba(47,125,107,0.3);
-  }
-  .choice-btn.share:hover:not(:disabled) {
-    box-shadow: 0 12px 28px rgba(47,125,107,0.45);
-  }
-  
+  .choice-btn.share { background: linear-gradient(135deg, var(--share-bright) 0%, var(--share) 100%); color: #fff; box-shadow: 0 8px 24px rgba(47,125,107,0.3); }
+  .choice-btn.share:hover:not(:disabled) { box-shadow: 0 12px 28px rgba(47,125,107,0.45); }
   .choice-btn:disabled { opacity: 0.25; cursor: default; }
 
-  /* Result Card */
-  .result-card {
-    width: 100%;
-    text-align: center;
-    animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  }
+  .result-card { width: 100%; text-align: center; animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
   }
   
-  .result-line {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 22px;
-    margin: 8px 0;
-    letter-spacing: 0.5px;
-  }
-  .result-line .you-tag { color: var(--share-bright); font-weight: 700; text-shadow: 0 0 10px rgba(67,191,103,0.15); }
-  .result-line .bot-tag { color: var(--steal-bright); font-weight: 700; text-shadow: 0 0 10px rgba(229,92,92,0.15); }
-  
-  .points-line {
-    margin-top: 18px;
-    font-size: 15px;
-    color: var(--ink-dim);
-    letter-spacing: 0.5px;
-  }
+  .result-line { font-family: 'Cormorant Garamond', serif; font-size: 22px; margin: 8px 0; }
+  .result-line .you-tag { color: var(--share-bright); font-weight: 700; }
+  .result-line .bot-tag { color: var(--steal-bright); font-weight: 700; }
+  .points-line { margin-top: 18px; font-size: 15px; color: var(--ink-dim); }
   .points-line b { color: var(--gold-bright); }
+  .next-hint { margin-top: 22px; font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--ink-dim); opacity: 0.7; }
 
-  .next-hint {
-    margin-top: 22px;
-    font-size: 10px;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    color: var(--ink-dim);
-    opacity: 0.7;
-  }
+  .final { text-align: center; width: 100%; animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+  .final-title { font-family: 'Cormorant Garamond', serif; font-size: 34px; color: var(--gold-bright); margin-bottom: 4px; font-weight: 700; }
+  .final-sub { color: var(--ink-dim); font-size: 15px; margin-bottom: 22px; }
 
-  /* Final / Stats Panel */
-  .final {
-    text-align: center;
-    width: 100%;
-    animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .final-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 34px;
-    color: var(--gold-bright);
-    margin-bottom: 4px;
-    font-weight: 700;
-  }
-  .final-sub {
-    color: var(--ink-dim);
-    font-size: 15px;
-    margin-bottom: 22px;
-  }
-
-  .stats-card {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(212, 175, 55, 0.15);
-    border-radius: 16px;
-    padding: 18px;
-    margin-bottom: 26px;
-    text-align: left;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  }
-  .stats-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 19px;
-    color: var(--gold-bright);
-    border-bottom: 1px solid rgba(212, 175, 55, 0.15);
-    padding-bottom: 8px;
-    margin-bottom: 12px;
-    text-align: center;
-    letter-spacing: 0.5px;
-  }
-  .stats-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13.5px;
-    margin: 10px 0;
-    color: var(--ink-dim);
-  }
-  .stats-row span {
-    color: var(--ink);
-    font-weight: 600;
-  }
-  .stats-row .highlight-bot {
-    color: var(--gold-bright);
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 16px;
-    font-weight: 700;
-  }
+  .stats-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 175, 55, 0.15); border-radius: 16px; padding: 18px; margin-bottom: 26px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+  .stats-title { font-family: 'Cormorant Garamond', serif; font-size: 19px; color: var(--gold-bright); border-bottom: 1px solid rgba(212, 175, 55, 0.15); padding-bottom: 8px; margin-bottom: 12px; text-align: center; }
+  .stats-row { display: flex; justify-content: space-between; font-size: 13.5px; margin: 10px 0; color: var(--ink-dim); }
+  .stats-row span { color: var(--ink); font-weight: 600; }
+  .stats-row .highlight-bot { color: var(--gold-bright); font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 700; }
 
   .replay-btn {
-    padding: 15px 34px;
-    border-radius: 999px;
-    border: 1px solid var(--gold);
+    padding: 15px 34px; border-radius: 999px; border: 1px solid var(--gold);
     background: linear-gradient(180deg, rgba(212,175,55,0.1) 0%, rgba(0,0,0,0) 100%);
-    color: var(--gold-bright);
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    cursor: pointer;
-    box-shadow: 0 4px 20px rgba(212,175,55,0.1);
-    transition: all 0.2s ease;
+    color: var(--gold-bright); font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; box-shadow: 0 4px 20px rgba(212,175,55,0.1); transition: all 0.2s ease;
   }
-  .replay-btn:hover {
-    background: rgba(212, 175, 55, 0.15);
-    box-shadow: 0 6px 25px rgba(212,175,55,0.25);
-    transform: translateY(-1px);
-  }
+  .replay-btn:hover { background: rgba(212, 175, 55, 0.15); box-shadow: 0 6px 25px rgba(212,175,55,0.25); transform: translateY(-1px); }
   .replay-btn:active { transform: translateY(1px) scale(0.98); }
 
-  .log {
-    margin-top: 22px;
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  .log-dot {
-    width: 11px; height: 11px; border-radius: 50%;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.03);
-    transition: all 0.3s ease;
-  }
+  .log { margin-top: 22px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .log-dot { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.03); transition: all 0.3s ease; }
   .log-dot.steal { background: var(--steal-bright); box-shadow: 0 0 10px rgba(229,92,92,0.45); }
   .log-dot.share { background: var(--share-bright); box-shadow: 0 0 10px rgba(67,191,163,0.45); }
 </style>
@@ -409,7 +293,7 @@
     <div class="title">The Game Theory</div>
     <div class="subtitle">Çal ya da Paylaş</div>
     <div class="mission-badge">
-      🛡️ Hedef Puan: <span>14+ Puan</span>
+      🛡️ Hedef Puan: <span>15+ Puan</span>
     </div>
   </div>
 
@@ -422,10 +306,11 @@
     <div class="score-box">
       <div class="score-label">Rakip</div>
       <div class="score-value bot" id="botScore">0</div>
+      <div class="bot-status-container neutral" id="botStatus">Nötr</div>
     </div>
   </div>
 
-  <div class="stage">
+  <div class="stage" id="stagePanel">
     <div class="spotlight"></div>
 
     <div id="playArea" style="width: 100%; text-align: center;">
@@ -463,7 +348,7 @@
         <div class="stats-title">Savaş Özeti</div>
         <div class="stats-row">Senin Tercihlerin: <span id="statYourChoices">0 Çal / 0 Paylaş</span></div>
         <div class="stats-row">Gizemli Rakibin: <span id="statBotStrategy" class="highlight-bot">—</span></div>
-        <div class="stats-row" id="missionStatusRow">Görev Durumu: <span id="statMission">Başarılı (14+ Puan)</span></div>
+        <div class="stats-row" id="missionStatusRow">Görev Durumu: <span id="statMission">—</span></div>
       </div>
 
       <button class="replay-btn" id="replayBtn">Tekrar Oyna</button>
@@ -474,13 +359,11 @@
 </div>
 
 <script>
-  // --- SABİTLER & AYARLAR ---
   const TOTAL_ROUNDS = 7;
   const ROUND_TIME = 20;
   const CIRC = 176;
-  const TARGET_SCORE = 14; // Oyuncunun hedeflemesi gereken minimum puan (13'ten büyük olması için en az 14)
+  const TARGET_SCORE = 15; 
 
-  // --- OYUN DURUMU (STATE) ---
   let round = 0;
   let youScore = 0;
   let botScore = 0;
@@ -492,99 +375,68 @@
   let botHistory = [];    
   let currentBot = null;  
 
-  // --- SES SENTEZLEYİCİ (HARİCİ DOSYASIZ) ---
+  // --- AUDIO API ---
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  
   function playSound(type) {
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-
+    osc.connect(gain); gain.connect(audioCtx.destination);
     const now = audioCtx.currentTime;
 
     if (type === 'click') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(600, now);
+      osc.type = 'sine'; osc.frequency.setValueAtTime(600, now);
       osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
-      gain.gain.setValueAtTime(0.12, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-      osc.start(now);
-      osc.stop(now + 0.1);
-    } 
-    else if (type === 'tick') {
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(750, now);
-      gain.gain.setValueAtTime(0.03, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-      osc.start(now);
-      osc.stop(now + 0.05);
-    } 
-    else if (type === 'win') {
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(330, now);
-      osc.frequency.setValueAtTime(440, now + 0.08);
-      osc.frequency.setValueAtTime(660, now + 0.16);
-      gain.gain.setValueAtTime(0.12, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-      osc.start(now);
-      osc.stop(now + 0.4);
-    } 
-    else if (type === 'lose') {
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(180, now);
+      gain.gain.setValueAtTime(0.12, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+      osc.start(now); osc.stop(now + 0.1);
+    } else if (type === 'tick') {
+      osc.type = 'triangle'; osc.frequency.setValueAtTime(750, now);
+      gain.gain.setValueAtTime(0.03, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+      osc.start(now); osc.stop(now + 0.05);
+    } else if (type === 'win') {
+      osc.type = 'triangle'; osc.frequency.setValueAtTime(330, now);
+      osc.frequency.setValueAtTime(440, now + 0.08); osc.frequency.setValueAtTime(660, now + 0.16);
+      gain.gain.setValueAtTime(0.12, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+      osc.start(now); osc.stop(now + 0.4);
+    } else if (type === 'lose') {
+      osc.type = 'sawtooth'; osc.frequency.setValueAtTime(180, now);
       osc.frequency.linearRampToValueAtTime(90, now + 0.35);
-      gain.gain.setValueAtTime(0.15, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-      osc.start(now);
-      osc.stop(now + 0.4);
+      gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+      osc.start(now); osc.stop(now + 0.4);
     }
   }
 
-  // --- BOT STRATEJİLERİ ---
+  // --- 10 BOT STRATEJİSİ ---
   const BOT_STRATEGIES = [
-    {
-      name: "Diplomat (Tit For Tat)",
-      decide: function() {
-        if (playerHistory.length === 0) return 'share';
-        return playerHistory[playerHistory.length - 1];
-      }
-    },
-    {
-      name: "Kinci (Grudger)",
-      decide: function() {
-        if (playerHistory.length === 0) return 'share';
-        return playerHistory.includes('steal') ? 'steal' : 'share';
-      }
-    },
-    {
-      name: "Kumarbaz (Random)",
-      decide: function() {
-        return Math.random() < 0.5 ? 'steal' : 'share';
-      }
-    },
-    {
-      name: "Sabırlı (Tit For Two Tats)",
-      decide: function() {
+    { name: "Diplomat (Tit For Tat)", decide: () => playerHistory.length === 0 ? 'share' : playerHistory[playerHistory.length - 1] },
+    { name: "Kinci (Grudger)", decide: () => playerHistory.length === 0 ? 'share' : (playerHistory.includes('steal') ? 'steal' : 'share') },
+    { name: "Kumarbaz (Random)", decide: () => Math.random() < 0.5 ? 'steal' : 'share' },
+    { name: "Sabırlı (Tit For Two Tats)", decide: () => {
         if (playerHistory.length < 2) return 'share';
-        const last = playerHistory[playerHistory.length - 1];
-        const prev = playerHistory[playerHistory.length - 2];
-        return (last === 'steal' && prev === 'steal') ? 'steal' : 'share';
-      }
-    },
-    {
-      name: "Analist (Adaptive)",
-      decide: function() {
+        return (playerHistory[playerHistory.length - 1] === 'steal' && playerHistory[playerHistory.length - 2] === 'steal') ? 'steal' : 'share';
+    }},
+    { name: "Analist (Adaptive)", decide: () => {
         if (playerHistory.length < 3) return 'share';
-        const lookback = Math.min(4, playerHistory.length);
-        const recent = playerHistory.slice(-lookback);
-        const stealCount = recent.filter(h => h === 'steal').length;
-        return (stealCount > lookback / 2) ? 'steal' : 'share';
-      }
-    }
+        const recent = playerHistory.slice(-4);
+        return (recent.filter(h => h === 'steal').length > recent.length / 2) ? 'steal' : 'share';
+    }},
+    { name: "Kurnaz (Tester)", decide: () => {
+        if (playerHistory.length === 0) return 'steal'; // İlk tur dener
+        if (playerHistory.length === 1) return playerHistory[0] === 'steal' ? 'share' : 'steal';
+        return playerHistory[playerHistory.length - 1];
+    }},
+    { name: "Kopya Kedisi (Copycat)", decide: () => {
+        if (playerHistory.length === 0) return 'share';
+        if (Math.random() < 0.10) return playerHistory[playerHistory.length - 1] === 'steal' ? 'share' : 'steal'; // %10 hata payı
+        return playerHistory[playerHistory.length - 1];
+    }},
+    { name: "Barışçıl (Pushover)", decide: () => Math.random() < 0.90 ? 'share' : 'steal' },
+    { name: "Yırtıcı (Predator)", decide: () => Math.random() < 0.90 ? 'steal' : 'share' },
+    { name: "Dedektif (Detective)", decide: () => {
+        const proto = ['share', 'steal', 'share', 'share'];
+        if (playerHistory.length < 4) return proto[playerHistory.length];
+        return playerHistory.includes('steal') ? playerHistory[playerHistory.length - 1] : 'steal';
+    }}
   ];
 
   function selectRandomBot() {
@@ -598,7 +450,7 @@
     return chosen;
   }
 
-  // --- DOM ELEMENTLERİ ---
+  // --- UI YÖNETİMİ ---
   const playArea = document.getElementById('playArea');
   const resultArea = document.getElementById('resultArea');
   const finalArea = document.getElementById('finalArea');
@@ -616,8 +468,8 @@
   const pointsText = document.getElementById('pointsText');
   const nextHint = document.getElementById('nextHint');
   const logEl = document.getElementById('log');
-
-  // --- OYUN AKIŞI ---
+  const botStatusEl = document.getElementById('botStatus');
+  const stagePanel = document.getElementById('stagePanel');
 
   function startRound() {
     round++;
@@ -625,14 +477,27 @@
 
     decided = false;
     timeLeft = ROUND_TIME;
-    roundPill.textContent = `Tur ${round} / ${TOTAL_ROUNDS}`;
+    
+    // 5. Tur Görsel Efekt Kontrolü (Double Puan)
+    if (round === 5) {
+      document.body.classList.add('double-mode');
+      stagePanel.classList.add('double-active');
+      roundPill.classList.add('double-active');
+      roundPill.innerHTML = `⚡ Tur 5 / 7 (X2 Puan!)`;
+    } else {
+      document.body.classList.remove('double-mode');
+      stagePanel.classList.remove('double-active');
+      roundPill.classList.remove('double-active');
+      roundPill.textContent = `Tur ${round} / ${TOTAL_ROUNDS}`;
+    }
+
     prompt.textContent = 'Kararını ver.';
     stealBtn.disabled = false;
     shareBtn.disabled = false;
     resultArea.style.display = 'none';
     finalArea.style.display = 'none';
     playArea.style.display = 'block';
-    timerCircle.style.stroke = 'var(--gold)';
+    timerCircle.style.stroke = round === 5 ? 'var(--double-color)' : 'var(--gold)';
     updateTimerUI();
 
     clearInterval(timerInterval);
@@ -667,22 +532,31 @@
 
     const botChoice = currentBot.decide();
 
-    // Puanlama Sistemi
+    // Temel Puanlama Matrisi
     let yourPoints = 0, botPoints = 0;
-    if (playerChoice === 'share' && botChoice === 'share') {
-      yourPoints = 3; botPoints = 3;
-    } else if (playerChoice === 'steal' && botChoice === 'share') {
-      yourPoints = 5; botPoints = 1;
-    } else if (playerChoice === 'share' && botChoice === 'steal') {
-      yourPoints = 1; botPoints = 5;
-    } else if (playerChoice === 'steal' && botChoice === 'steal') {
-      yourPoints = -1; botPoints = -1;
-    }
+    if (playerChoice === 'share' && botChoice === 'share') { yourPoints = 3; botPoints = 3; } 
+    else if (playerChoice === 'steal' && botChoice === 'share') { yourPoints = 5; botPoints = 1; } 
+    else if (playerChoice === 'share' && botChoice === 'steal') { yourPoints = 1; botPoints = 5; } 
+    else if (playerChoice === 'steal' && botChoice === 'steal') { yourPoints = -1; botPoints = -1; }
+
+    // 5. Tur Katlayıcısı
+    const multiplier = (round === 5) ? 2 : 1;
+    yourPoints *= multiplier;
+    botPoints *= multiplier;
 
     youScore += yourPoints;
     botScore += botPoints;
     youScoreEl.textContent = youScore;
     botScoreEl.textContent = botScore;
+
+    // Bot Duygu Durum Göstergesi Güncelleme
+    if (playerChoice === 'steal') {
+      botStatusEl.textContent = "⚡ Öfkeli";
+      botStatusEl.className = "bot-status-container angry";
+    } else {
+      botStatusEl.textContent = "❤️ Güvenli";
+      botStatusEl.className = "bot-status-container trust";
+    }
 
     playerHistory.push(playerChoice);
     botHistory.push(botChoice);
@@ -728,29 +602,38 @@
     const finalSub = document.getElementById('finalSub');
     const statMission = document.getElementById('statMission');
 
-    const scoreCondition = youScore >= TARGET_SCORE; // 13 puandan fazla (en az 14 puan)
-    const winCondition = youScore >= botScore;       // Botu yenmiş veya berabere kalmış olma koşulu
+    const scoreCondition = youScore >= TARGET_SCORE; // En az 15 Puan
 
-    // Hem botu geçmeli hem de en az 14 puan toplamış olmalı
-    if (scoreCondition && winCondition) {
-      finalTitle.textContent = 'Büyük Başarı!';
+    // GELİŞMİŞ KAZANMA KRİTERLERİ (BARAJ: 15)
+    if (scoreCondition && youScore > botScore) {
+      finalTitle.textContent = 'Büyük Zafer!';
       finalTitle.style.color = 'var(--share-bright)';
       statMission.textContent = `Başarılı (${youScore} Puan)`;
       statMission.style.color = 'var(--share-bright)';
       playSound('win');
     } 
-    else if (!scoreCondition && winCondition) {
-      finalTitle.textContent = 'Hedef Puan Altında!';
+    else if (scoreCondition && youScore === botScore) {
+      // İki taraf da 15+ geçmiş ama berabere kalmışsa
+      finalTitle.textContent = 'Oyun Berabere';
+      finalTitle.style.color = 'var(--gold-bright)';
+      statMission.textContent = `Beraberlik (${youScore} Puan)`;
+      statMission.style.color = 'var(--gold-bright)';
+      playSound('win');
+    } 
+    else if (!scoreCondition) {
+      // 15 puan barajının altında kalma durumu (Botu geçse bile başarısız)
+      finalTitle.textContent = 'Baraj Geçilemedi!';
       finalTitle.style.color = 'var(--steal-bright)';
-      statMission.textContent = `Başarısız (${youScore} Puan / Hedef: 14+)`;
+      statMission.textContent = `Başarısız (${youScore} / Hedef: 15)`;
       statMission.style.color = 'var(--steal-bright)';
       playSound('lose');
     } 
     else {
+      // Skor olarak bota yenilme durumu (Kendisinin 15+ olmasına rağmen rakip daha yüksekse)
       finalTitle.textContent = 'Kaybettin';
       finalTitle.style.color = 'var(--steal-bright)';
-      statMission.textContent = scoreCondition ? `Başarılı (${youScore} Puan)` : `Başarısız (${youScore} Puan / Hedef: 14+)`;
-      statMission.style.color = scoreCondition ? 'var(--share-bright)' : 'var(--steal-bright)';
+      statMission.textContent = `Yetersiz Skor (Rakip Seni Geçti)`;
+      statMission.style.color = 'var(--steal-bright)';
       playSound('lose');
     }
 
@@ -763,13 +646,9 @@
   }
 
   function resetGame() {
-    round = 0; 
-    youScore = 0; 
-    botScore = 0; 
-    playerHistory = [];
-    botHistory = [];
-    youScoreEl.textContent = '0'; 
-    botScoreEl.textContent = '0';
+    round = 0; youScore = 0; botScore = 0; playerHistory = []; botHistory = [];
+    youScoreEl.textContent = '0'; botScoreEl.textContent = '0';
+    botStatusEl.textContent = "Nötr"; botStatusEl.className = "bot-status-container neutral";
     
     currentBot = selectRandomBot();
     renderLog();
