@@ -5,27 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>The Game Theory — Çal ya da Paylaş</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
   :root {
-    --bg: #0a0a0d;
-    --stage: #141319;
-    --stage-edge: #201f28;
+    --bg: #050508;
+    --stage: rgba(20, 19, 25, 0.7);
+    --stage-edge: rgba(212, 175, 55, 0.15);
     --gold: #d4af37;
-    --gold-bright: #f2d675;
+    --gold-bright: #f4d97d;
     --steal: #b23a3a;
-    --steal-bright: #d95252;
+    --steal-bright: #e55c5c;
     --share: #2f7d6b;
-    --share-bright: #3fa088;
-    --ink: #ece7db;
-    --ink-dim: #9a978f;
+    --share-bright: #43bfa3;
+    --ink: #f3efe6;
+    --ink-dim: #a3a097;
+    --premium-glow: rgba(212, 175, 55, 0.08);
   }
 
   * { box-sizing: border-box; }
 
   html, body {
     margin: 0; padding: 0; height: 100%;
-    background: radial-gradient(ellipse at 50% 0%, #1b1a22 0%, var(--bg) 60%);
+    background: radial-gradient(circle at 50% -20%, #1c1924 0%, #08080c 50%, var(--bg) 100%);
     color: var(--ink);
     font-family: 'Inter', system-ui, sans-serif;
     overflow-x: hidden;
@@ -33,202 +34,265 @@
   }
 
   .wrap {
-    max-width: 480px;
+    max-width: 460px;
     margin: 0 auto;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    padding: 24px 20px 40px;
+    padding: 20px 16px 30px;
   }
 
+  /* Premium Header */
+  .header-container {
+    text-align: center;
+    margin-bottom: 20px;
+  }
   .title {
     font-family: 'Cormorant Garamond', serif;
     font-weight: 700;
-    font-size: 34px;
-    text-align: center;
-    letter-spacing: 0.5px;
+    font-size: 38px;
+    letter-spacing: 1px;
     color: var(--gold-bright);
-    margin: 6px 0 2px;
-    text-shadow: 0 0 20px rgba(212,175,55,0.25);
+    margin: 0;
+    text-shadow: 0 0 25px rgba(212,175,55,0.3);
+    background: linear-gradient(180deg, #ffffff 10%, var(--gold-bright) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
-  
   .subtitle {
-    text-align: center;
-    font-size: 12px;
-    letter-spacing: 3px;
+    font-size: 11px;
+    letter-spacing: 4px;
     text-transform: uppercase;
     color: var(--ink-dim);
-    margin-bottom: 22px;
+    margin: 4px 0 12px;
+    opacity: 0.8;
   }
 
+  /* Görev Rozeti */
+  .mission-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(90deg, rgba(212, 175, 55, 0.04) 0%, rgba(212, 175, 55, 0.12) 50%, rgba(212, 175, 55, 0.04) 100%);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--gold-bright);
+    text-shadow: 0 0 10px rgba(212,175,55,0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+  .mission-badge span {
+    font-weight: 700;
+  }
+
+  /* HUD (Skor Paneli) */
   .hud {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 18px;
-    font-family: 'Cormorant Garamond', serif;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 16px;
+    padding: 10px 16px;
+    backdrop-filter: blur(10px);
   }
-  
   .score-box {
     text-align: center;
-    min-width: 84px;
+    min-width: 80px;
   }
-  
   .score-label {
     font-family: 'Inter', sans-serif;
-    font-size: 10px;
+    font-size: 9px;
     letter-spacing: 2px;
     text-transform: uppercase;
     color: var(--ink-dim);
   }
-  
   .score-value {
-    font-size: 30px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
     font-weight: 700;
     color: var(--ink);
-    transition: color 0.3s ease;
   }
-  .score-value.you { color: var(--share-bright); }
-  .score-value.bot { color: var(--steal-bright); }
+  .score-value.you { 
+    color: var(--share-bright); 
+    text-shadow: 0 0 15px rgba(67, 191, 163, 0.2);
+  }
+  .score-value.bot { 
+    color: var(--steal-bright); 
+    text-shadow: 0 0 15px rgba(229, 92, 92, 0.2);
+  }
 
   .round-pill {
     font-family: 'Inter', sans-serif;
     font-size: 11px;
+    font-weight: 500;
     letter-spacing: 1.5px;
-    color: var(--gold);
-    border: 1px solid rgba(212,175,55,0.4);
+    color: var(--gold-bright);
+    border: 1px solid rgba(212,175,55,0.3);
     border-radius: 999px;
     padding: 6px 14px;
     background: rgba(212,175,55,0.06);
+    box-shadow: 0 0 15px rgba(212,175,55,0.05);
   }
 
+  /* Premium Stage */
   .stage {
     position: relative;
-    background: linear-gradient(180deg, var(--stage) 0%, #0e0d12 100%);
+    background: var(--stage);
     border: 1px solid var(--stage-edge);
-    border-radius: 20px;
-    padding: 30px 20px 24px;
+    border-radius: 24px;
+    padding: 34px 24px 28px;
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 340px;
-    box-shadow: inset 0 0 60px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4);
+    min-height: 360px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 
+      inset 0 0 40px rgba(0,0,0,0.6), 
+      0 15px 35px rgba(0,0,0,0.5),
+      0 0 30px var(--premium-glow);
   }
 
   .spotlight {
     position: absolute;
-    top: -40px; left: 50%;
+    top: -50px; left: 50%;
     transform: translateX(-50%);
-    width: 260px; height: 260px;
-    background: radial-gradient(circle, rgba(212,175,55,0.12) 0%, transparent 70%);
+    width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%);
     pointer-events: none;
   }
 
+  /* Coin */
   .coin {
-    width: 92px; height: 92px;
+    width: 96px; height: 96px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, var(--gold-bright), var(--gold) 55%, #8a6a1f 100%);
-    box-shadow: 0 0 30px rgba(212,175,55,0.35), inset 0 -6px 10px rgba(0,0,0,0.25);
+    background: radial-gradient(circle at 35% 30%, #fff 0%, var(--gold-bright) 30%, var(--gold) 70%, #6e5210 100%);
+    box-shadow: 
+      0 0 35px rgba(212,175,55,0.4), 
+      inset 0 -6px 12px rgba(0,0,0,0.3),
+      inset 0 4px 6px rgba(255,255,255,0.6);
     display: flex; align-items: center; justify-content: center;
-    font-size: 34px;
-    margin-bottom: 22px;
+    font-size: 38px;
+    margin-bottom: 24px;
     transition: transform 0.5s ease;
   }
-  .coin.spin { animation: spin 0.9s ease-in-out; }
+  .coin.spin { animation: spin 0.9s cubic-bezier(0.4, 0, 0.2, 1); }
   @keyframes spin {
     0% { transform: rotateY(0deg) scale(1); }
-    50% { transform: rotateY(360deg) scale(1.08); }
+    50% { transform: rotateY(360deg) scale(1.1); }
     100% { transform: rotateY(720deg) scale(1); }
   }
 
+  /* Premium Timer Ring */
   .timer-ring {
     position: relative;
-    width: 64px; height: 64px;
-    margin-bottom: 20px;
+    width: 68px; height: 68px;
+    margin-bottom: 24px;
   }
   .timer-ring svg { transform: rotate(-90deg); }
   .timer-ring circle {
     fill: none;
-    stroke-width: 4;
+    stroke-width: 3.5;
   }
-  .timer-track { stroke: rgba(255,255,255,0.08); }
+  .timer-track { stroke: rgba(255,255,255,0.05); }
   .timer-progress {
     stroke: var(--gold);
     stroke-linecap: round;
     transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
+    filter: drop-shadow(0 0 4px var(--gold));
   }
   .timer-num {
     position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center;
     font-family: 'Cormorant Garamond', serif;
     font-weight: 700;
-    font-size: 22px;
+    font-size: 24px;
+    text-shadow: 0 0 10px rgba(255,255,255,0.1);
   }
 
   .prompt {
     text-align: center;
     font-family: 'Cormorant Garamond', serif;
-    font-size: 22px;
+    font-size: 23px;
     color: var(--ink);
-    margin-bottom: 22px;
+    margin-bottom: 24px;
     min-height: 30px;
+    letter-spacing: 0.3px;
   }
 
+  /* Choice Buttons */
   .choices {
     display: flex;
-    gap: 14px;
+    gap: 16px;
     width: 100%;
   }
-  
   .choice-btn {
     flex: 1;
-    padding: 16px 0;
-    border-radius: 14px;
-    border: none;
+    padding: 18px 0;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.05);
     font-family: 'Cormorant Garamond', serif;
-    font-size: 20px;
+    font-size: 21px;
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
-  .choice-btn:active { transform: scale(0.96); }
+  .choice-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+  }
+  .choice-btn:active:not(:disabled) { 
+    transform: translateY(1px) scale(0.98); 
+  }
   
   .choice-btn.steal {
-    background: linear-gradient(180deg, var(--steal-bright), var(--steal));
-    color: #1a0a0a;
-    box-shadow: 0 8px 20px rgba(178,58,58,0.35);
+    background: linear-gradient(135deg, var(--steal-bright) 0%, var(--steal) 100%);
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(178,58,58,0.3);
+  }
+  .choice-btn.steal:hover:not(:disabled) {
+    box-shadow: 0 12px 28px rgba(178,58,58,0.45);
   }
   
   .choice-btn.share {
-    background: linear-gradient(180deg, var(--share-bright), var(--share));
-    color: #0a1a15;
-    box-shadow: 0 8px 20px rgba(47,125,107,0.35);
+    background: linear-gradient(135deg, var(--share-bright) 0%, var(--share) 100%);
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(47,125,107,0.3);
   }
-  .choice-btn:disabled { opacity: 0.35; cursor: default; }
+  .choice-btn.share:hover:not(:disabled) {
+    box-shadow: 0 12px 28px rgba(47,125,107,0.45);
+  }
+  
+  .choice-btn:disabled { opacity: 0.25; cursor: default; }
 
+  /* Result Card */
   .result-card {
     width: 100%;
     text-align: center;
-    animation: fadeUp 0.4s ease;
+    animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
   @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
   }
   
   .result-line {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 21px;
-    margin: 6px 0;
+    font-size: 22px;
+    margin: 8px 0;
+    letter-spacing: 0.5px;
   }
-  .result-line .you-tag { color: var(--share-bright); font-weight: 700; }
-  .result-line .bot-tag { color: var(--steal-bright); font-weight: 700; }
+  .result-line .you-tag { color: var(--share-bright); font-weight: 700; text-shadow: 0 0 10px rgba(67,191,103,0.15); }
+  .result-line .bot-tag { color: var(--steal-bright); font-weight: 700; text-shadow: 0 0 10px rgba(229,92,92,0.15); }
   
   .points-line {
-    margin-top: 14px;
+    margin-top: 18px;
     font-size: 15px;
     color: var(--ink-dim);
     letter-spacing: 0.5px;
@@ -236,53 +300,57 @@
   .points-line b { color: var(--gold-bright); }
 
   .next-hint {
-    margin-top: 20px;
-    font-size: 11px;
-    letter-spacing: 2px;
+    margin-top: 22px;
+    font-size: 10px;
+    letter-spacing: 2.5px;
     text-transform: uppercase;
     color: var(--ink-dim);
+    opacity: 0.7;
   }
 
-  /* Final Alanı ve İstatistikler */
+  /* Final / Stats Panel */
   .final {
     text-align: center;
     width: 100%;
-    animation: fadeUp 0.5s ease;
+    animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .final-title {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 32px;
+    font-size: 34px;
     color: var(--gold-bright);
     margin-bottom: 4px;
+    font-weight: 700;
   }
   .final-sub {
     color: var(--ink-dim);
     font-size: 15px;
-    margin-bottom: 20px;
+    margin-bottom: 22px;
   }
 
   .stats-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 24px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(212, 175, 55, 0.15);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 26px;
     text-align: left;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
   }
   .stats-title {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 18px;
-    color: var(--gold);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    padding-bottom: 6px;
-    margin-bottom: 10px;
+    font-size: 19px;
+    color: var(--gold-bright);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
     text-align: center;
+    letter-spacing: 0.5px;
   }
   .stats-row {
     display: flex;
     justify-content: space-between;
-    font-size: 13px;
-    margin: 8px 0;
+    font-size: 13.5px;
+    margin: 10px 0;
     color: var(--ink-dim);
   }
   .stats-row span {
@@ -297,44 +365,53 @@
   }
 
   .replay-btn {
-    padding: 14px 28px;
+    padding: 15px 34px;
     border-radius: 999px;
     border: 1px solid var(--gold);
-    background: transparent;
+    background: linear-gradient(180deg, rgba(212,175,55,0.1) 0%, rgba(0,0,0,0) 100%);
     color: var(--gold-bright);
     font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    letter-spacing: 1.5px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
     text-transform: uppercase;
     cursor: pointer;
-    transition: background 0.2s, transform 0.15s;
+    box-shadow: 0 4px 20px rgba(212,175,55,0.1);
+    transition: all 0.2s ease;
   }
   .replay-btn:hover {
-    background: rgba(212, 175, 55, 0.1);
+    background: rgba(212, 175, 55, 0.15);
+    box-shadow: 0 6px 25px rgba(212,175,55,0.25);
+    transform: translateY(-1px);
   }
-  .replay-btn:active { transform: scale(0.97); }
+  .replay-btn:active { transform: translateY(1px) scale(0.98); }
 
   .log {
-    margin-top: 18px;
+    margin-top: 22px;
     display: flex;
-    gap: 6px;
+    gap: 8px;
     justify-content: center;
     flex-wrap: wrap;
   }
   .log-dot {
-    width: 10px; height: 10px; border-radius: 50%;
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.05);
-    transition: background-color 0.3s;
+    width: 11px; height: 11px; border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.03);
+    transition: all 0.3s ease;
   }
-  .log-dot.steal { background: var(--steal-bright); box-shadow: 0 0 8px rgba(217,82,82,0.4); }
-  .log-dot.share { background: var(--share-bright); box-shadow: 0 0 8px rgba(63,160,136,0.4); }
+  .log-dot.steal { background: var(--steal-bright); box-shadow: 0 0 10px rgba(229,92,92,0.45); }
+  .log-dot.share { background: var(--share-bright); box-shadow: 0 0 10px rgba(67,191,163,0.45); }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="title">The Game Theory</div>
-  <div class="subtitle">Çal ya da Paylaş</div>
+  <div class="header-container">
+    <div class="title">The Game Theory</div>
+    <div class="subtitle">Çal ya da Paylaş</div>
+    <div class="mission-badge">
+      🛡️ Hedef Puan: <span>14+ Puan</span>
+    </div>
+  </div>
 
   <div class="hud">
     <div class="score-box">
@@ -386,6 +463,7 @@
         <div class="stats-title">Savaş Özeti</div>
         <div class="stats-row">Senin Tercihlerin: <span id="statYourChoices">0 Çal / 0 Paylaş</span></div>
         <div class="stats-row">Gizemli Rakibin: <span id="statBotStrategy" class="highlight-bot">—</span></div>
+        <div class="stats-row" id="missionStatusRow">Görev Durumu: <span id="statMission">Başarılı (14+ Puan)</span></div>
       </div>
 
       <button class="replay-btn" id="replayBtn">Tekrar Oyna</button>
@@ -400,6 +478,7 @@
   const TOTAL_ROUNDS = 7;
   const ROUND_TIME = 20;
   const CIRC = 176;
+  const TARGET_SCORE = 14; // Oyuncunun hedeflemesi gereken minimum puan (13'ten büyük olması için en az 14)
 
   // --- OYUN DURUMU (STATE) ---
   let round = 0;
@@ -409,10 +488,9 @@
   let timerInterval = null;
   let decided = false;
   
-  // Geçmiş takibi
-  let playerHistory = []; // Oyuncunun tercihleri ('steal' veya 'share')
-  let botHistory = [];    // Botun tercihleri ('steal' veya 'share')
-  let currentBot = null;  // Aktif bot nesnesi
+  let playerHistory = []; 
+  let botHistory = [];    
+  let currentBot = null;  
 
   // --- SES SENTEZLEYİCİ (HARİCİ DOSYASIZ) ---
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -432,37 +510,37 @@
       osc.type = 'sine';
       osc.frequency.setValueAtTime(600, now);
       osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
-      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.setValueAtTime(0.12, now);
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
       osc.start(now);
       osc.stop(now + 0.1);
     } 
     else if (type === 'tick') {
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(800, now);
-      gain.gain.setValueAtTime(0.04, now);
+      osc.frequency.setValueAtTime(750, now);
+      gain.gain.setValueAtTime(0.03, now);
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
       osc.start(now);
       osc.stop(now + 0.05);
     } 
     else if (type === 'win') {
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(300, now);
-      osc.frequency.setValueAtTime(400, now + 0.08);
-      osc.frequency.setValueAtTime(600, now + 0.16);
+      osc.frequency.setValueAtTime(330, now);
+      osc.frequency.setValueAtTime(440, now + 0.08);
+      osc.frequency.setValueAtTime(660, now + 0.16);
       gain.gain.setValueAtTime(0.12, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
       osc.start(now);
-      osc.stop(now + 0.35);
+      osc.stop(now + 0.4);
     } 
     else if (type === 'lose') {
       osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(220, now);
-      osc.frequency.linearRampToValueAtTime(110, now + 0.3);
-      gain.gain.setValueAtTime(0.12, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.linearRampToValueAtTime(90, now + 0.35);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
       osc.start(now);
-      osc.stop(now + 0.35);
+      osc.stop(now + 0.4);
     }
   }
 
@@ -470,31 +548,26 @@
   const BOT_STRATEGIES = [
     {
       name: "Diplomat (Tit For Tat)",
-      description: "İlk tur barışçıldır. Sonraki her turda senin bir önceki hamleni birebir kopyalar.",
       decide: function() {
         if (playerHistory.length === 0) return 'share';
-        return playerHistory[playerHistory.length - 1]; // Oyuncunun son hamlesi neyse o
+        return playerHistory[playerHistory.length - 1];
       }
     },
     {
       name: "Kinci (Grudger)",
-      description: "İş birliğiyle başlar. Ancak ona karşı sadece 1 kez bile çalsan, asla affetmez ve oyun sonuna kadar hep çalar.",
       decide: function() {
         if (playerHistory.length === 0) return 'share';
-        const hasStolen = playerHistory.includes('steal');
-        return hasStolen ? 'steal' : 'share';
+        return playerHistory.includes('steal') ? 'steal' : 'share';
       }
     },
     {
       name: "Kumarbaz (Random)",
-      description: "Tamamen öngörülemezdir. Şansa inanır, her tur %50 ihtimalle çalar veya paylaşır.",
       decide: function() {
         return Math.random() < 0.5 ? 'steal' : 'share';
       }
     },
     {
       name: "Sabırlı (Tit For Two Tats)",
-      description: "Son derece hoşgörülüdür. Sen üst üste 2 kez çalmadığın sürece o her zaman paylaşmaya devam eder.",
       decide: function() {
         if (playerHistory.length < 2) return 'share';
         const last = playerHistory[playerHistory.length - 1];
@@ -504,31 +577,22 @@
     },
     {
       name: "Analist (Adaptive)",
-      description: "Tarihi analiz eder. Son 3 turunun çoğunluğuna bakar; eğer bencil davranıyorsan o da bencil olur.",
       decide: function() {
-        if (playerHistory.length < 3) return 'share'; // Analiz için veri birikene kadar paylaşır
-        
-        // Son 3 veya 4 hamleyi incele
+        if (playerHistory.length < 3) return 'share';
         const lookback = Math.min(4, playerHistory.length);
         const recent = playerHistory.slice(-lookback);
         const stealCount = recent.filter(h => h === 'steal').length;
-        
-        // Eğer yarısından fazlasında çaldıysan, o da çalar
         return (stealCount > lookback / 2) ? 'steal' : 'share';
       }
     }
   ];
 
-  // --- ARD ARDA AYNI BOTUN GELMESİNİ ENGELLEYEN SEÇİM FONKSİYONU ---
   function selectRandomBot() {
     const lastBotName = sessionStorage.getItem('lastPlayedBot');
     let availableBots = BOT_STRATEGIES;
-    
-    // Eğer hafızada eski bot varsa ve listede alternatifler varsa, onu ele
     if (lastBotName && BOT_STRATEGIES.length > 1) {
       availableBots = BOT_STRATEGIES.filter(b => b.name !== lastBotName);
     }
-    
     const chosen = availableBots[Math.floor(Math.random() * availableBots.length)];
     sessionStorage.setItem('lastPlayedBot', chosen.name);
     return chosen;
@@ -581,7 +645,7 @@
       }
       if (timeLeft <= 0) {
         clearInterval(timerInterval);
-        if (!decided) { makeChoice('share'); } // Süre biterse otomatik "Paylaş" seçilir
+        if (!decided) { makeChoice('share'); } 
       }
     }, 1000);
   }
@@ -601,10 +665,9 @@
     shareBtn.disabled = true;
     playSound('click');
 
-    // Bot kendi stratejisine göre karar verir
     const botChoice = currentBot.decide();
 
-    // Puanlama Algoritması
+    // Puanlama Sistemi
     let yourPoints = 0, botPoints = 0;
     if (playerChoice === 'share' && botChoice === 'share') {
       yourPoints = 3; botPoints = 3;
@@ -621,26 +684,22 @@
     youScoreEl.textContent = youScore;
     botScoreEl.textContent = botScore;
 
-    // Geçmişi kaydet
     playerHistory.push(playerChoice);
     botHistory.push(botChoice);
     renderLog();
 
-    // Coin Animasyonu
     coin.classList.add('spin');
     setTimeout(() => coin.classList.remove('spin'), 900);
 
-    // Sonuç Ekranı Güncelleme
     playArea.style.display = 'none';
     resultArea.style.display = 'block';
 
     youChoiceText.textContent = playerChoice === 'steal' ? 'ÇALDI' : 'PAYLAŞTI';
-    youChoiceText.className = playerChoice === 'steal' ? 'bot-tag' : 'you-tag'; // Kırmızı/Yeşil renk uyumu
+    youChoiceText.className = playerChoice === 'steal' ? 'bot-tag' : 'you-tag';
 
     botChoiceText.textContent = botChoice === 'steal' ? 'ÇALDI' : 'PAYLAŞTI';
     botChoiceText.className = botChoice === 'steal' ? 'bot-tag' : 'you-tag';
 
-    // Negatif puan durumlarında eksi işaretini ve renkleri optimize etme
     const youFormatted = yourPoints >= 0 ? `+${yourPoints}` : `${yourPoints}`;
     const botFormatted = botPoints >= 0 ? `+${botPoints}` : `${botPoints}`;
     pointsText.innerHTML = `Bu tur: sen <b>${youFormatted}</b> · rakip <b>${botFormatted}</b>`;
@@ -667,24 +726,36 @@
 
     const finalTitle = document.getElementById('finalTitle');
     const finalSub = document.getElementById('finalSub');
+    const statMission = document.getElementById('statMission');
 
-    // Kazanan Belirleme ve Ses Efektleri
-    if (youScore > botScore) {
-      finalTitle.textContent = 'Zafer Senin!';
+    const scoreCondition = youScore >= TARGET_SCORE; // 13 puandan fazla (en az 14 puan)
+    const winCondition = youScore >= botScore;       // Botu yenmiş veya berabere kalmış olma koşulu
+
+    // Hem botu geçmeli hem de en az 14 puan toplamış olmalı
+    if (scoreCondition && winCondition) {
+      finalTitle.textContent = 'Büyük Başarı!';
       finalTitle.style.color = 'var(--share-bright)';
+      statMission.textContent = `Başarılı (${youScore} Puan)`;
+      statMission.style.color = 'var(--share-bright)';
       playSound('win');
-    } else if (botScore > youScore) {
+    } 
+    else if (!scoreCondition && winCondition) {
+      finalTitle.textContent = 'Hedef Puan Altında!';
+      finalTitle.style.color = 'var(--steal-bright)';
+      statMission.textContent = `Başarısız (${youScore} Puan / Hedef: 14+)`;
+      statMission.style.color = 'var(--steal-bright)';
+      playSound('lose');
+    } 
+    else {
       finalTitle.textContent = 'Kaybettin';
       finalTitle.style.color = 'var(--steal-bright)';
+      statMission.textContent = scoreCondition ? `Başarılı (${youScore} Puan)` : `Başarısız (${youScore} Puan / Hedef: 14+)`;
+      statMission.style.color = scoreCondition ? 'var(--share-bright)' : 'var(--steal-bright)';
       playSound('lose');
-    } else {
-      finalTitle.textContent = 'Berabere';
-      finalTitle.style.color = 'var(--gold-bright)';
-      playSound('win');
     }
+
     finalSub.textContent = `Sen: ${youScore} Puan  ·  Rakip: ${botScore} Puan`;
 
-    // İstatistik Bilgilerini Doldurma
     const stealCount = playerHistory.filter(h => h === 'steal').length;
     const shareCount = playerHistory.filter(h => h === 'share').length;
     document.getElementById('statYourChoices').textContent = `${stealCount} Çal / ${shareCount} Paylaş`;
@@ -700,19 +771,15 @@
     youScoreEl.textContent = '0'; 
     botScoreEl.textContent = '0';
     
-    // Her yeni oyunda rastgele ve farklı bir bot seçilir
     currentBot = selectRandomBot();
-    
     renderLog();
     startRound();
   }
 
-  // --- BAŞLANGIÇ TETİKLEYİCİLERİ ---
   stealBtn.addEventListener('click', () => makeChoice('steal'));
   shareBtn.addEventListener('click', () => makeChoice('share'));
   document.getElementById('replayBtn').addEventListener('click', resetGame);
 
-  // Oyunu ilk kez yüklerken botu ata ve başlat
   currentBot = selectRandomBot();
   startRound();
 </script>
